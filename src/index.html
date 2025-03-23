@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <link rel="shortcut icon" href="./assets/favico.png" type="image/x-icon" />
+    <title>Super BomberMan</title>
+  </head>
+  <body>
+    <div class="loading-container">
+      <div class="loading-text">0%</div>
+    </div>
+    <div class="container">
+      <div id="hud">
+        <div id="score">Score: 0</div>
+        <div id="lives">Lives: 5</div>
+        <div id="timer">Timer: 5:00</div>
+      </div>
+    </div>
+    <div id="pauseMenu" class="pause-menu hidden">
+      <div class="pause-content">
+        <h1>Game Paused</h1>
+        <button id="continueButton">Continue</button>
+        <button id="restartButton">Restart</button>
+      </div>
+    </div>
+    <div id="gameOverScreen" class="hidden">
+      <div class="game-over-content">
+        <h1>Game Over</h1>
+        <button id="restartGameOver">Restart</button>
+      </div>
+    </div>
+    <div id="winnerScreen" class="hidden">
+      <div class="winner-content">
+        <h1>winner winner chicken dinner</h1>
+        <button id="playAgainButton">Play Again</button>
+      </div>
+    </div>
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
