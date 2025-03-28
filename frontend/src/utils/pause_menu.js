@@ -1,5 +1,5 @@
 import { init } from "../main.js";
-import { playerState } from "../utils/check_resizing.js";
+import { playerState } from "./check_resizing.js";
 import { gameLoop } from "../engine/game_loop.js";
 import { resetPlayer } from "../core/player.js";
 
