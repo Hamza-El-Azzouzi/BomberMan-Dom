@@ -1,10 +1,6 @@
 import { defineComponent, h } from "../../../framework/src/index.js";
-import {
-  TILE_SIZE,
-  SPRITE_DIRECTIONS,
-  PLAYER_STATES,
-} from "../constants/game-constants.js";
-import { checkCollision, getTilePosition } from "../utils/collision.js";
+import { TILE_SIZE, SPRITE_DIRECTIONS } from "../constants/game-constants.js";
+import { checkCollision } from "../utils/collision.js";
 
 export const PlayerComponent = defineComponent({
   state() {
@@ -13,145 +9,227 @@ export const PlayerComponent = defineComponent({
       y: 0,
       direction: "down",
       frame: 0,
-      speed: PLAYER_STATES.speed,
+      speed: 150,
       isDying: false,
-      activeKeys: new Set(),
+      activeKeys: [],
+      row: 1,
+      col: 1,
+      lastAnimationTime: 0,
+      moving: false,
     };
   },
 
   onMounted() {
-    console.log(this.props);
-    this.x = this.props.player.x;
-    this.y = this.props.player.y;
+    this.updateState({
+        x: this.props.player.x || 0,
+        y: this.props.player.y || 0,
+        frame: this.props.frame || 0,
+        direction: this.props.direction || "down",
+      });
     if (this.props.isCurrentPlayer) {
-      window.addEventListener("keydown", this.handleKeyDown.bind(this));
-      window.addEventListener("keyup", this.handleKeyUp.bind(this));
+      document.addEventListener("keydown", this.handleKeyDown.bind(this));
+      document.addEventListener("keyup", this.handleKeyUp.bind(this));
+      document.addEventListener("keydown", this.handleBombPlacement.bind(this));
 
       this.animate = this.animate.bind(this);
       requestAnimationFrame(this.animate);
     }
-    this.lastAnimationTime = 0;
-    this.frameInterval = 150;
   },
 
   handleKeyDown(event) {
-    this.state.activeKeys.add(event.key);
-    if (event.key === " ") {
-      // Implement bomb placement later
-      event.preventDefault();
+    if (!this.state.activeKeys.includes(event.key)) {
+      this.updateState({
+        activeKeys: [...this.state.activeKeys, event.key],
+      });
     }
   },
 
   handleKeyUp(event) {
-    this.state.activeKeys.delete(event.key);
+    const index = this.state.activeKeys.indexOf(event.key);
+    if (index !== -1) {
+      const newKeys = [...this.state.activeKeys];
+      newKeys.splice(index, 1);
+      this.updateState({ activeKeys: newKeys });
+    }
+  },
+
+  handleBombPlacement(event) {
+    if (event.key === " " && !this.state.isDying) {
+      event.preventDefault();
+      // Implement bomb placement later
+    }
+  },
+
+  killPlayer() {
+    this.updateState({ isDying: true });
+    // Add death animation listener
+    const resetAfterAnimation = () => {
+      this.resetPlayer();
+      this.$el.removeEventListener("animationend", resetAfterAnimation);
+    };
+    this.$el.addEventListener("animationend", resetAfterAnimation);
+  },
+
+  resetPlayer() {
+    this.updateState({
+      isDying: false,
+      x: TILE_SIZE,
+      y: TILE_SIZE,
+      col: 1,
+      row: 1,
+      direction: "down",
+      frame: 0,
+    });
   },
 
   animate(timestamp) {
     if (!this.state.isDying) {
       const deltaTime = (timestamp - (this.lastTimestamp || timestamp)) / 1000;
       this.lastTimestamp = timestamp;
-      this.updatePosition(deltaTime);
+      this.update(deltaTime);
     }
     requestAnimationFrame(this.animate);
   },
 
-  updatePosition(deltaTime) {
-    const lastKey = Array.from(this.state.activeKeys).pop();
-    if (!lastKey) {
+  update(deltaTime) {
+    if (this.state.isDying) return;
+
+    if (this.state.activeKeys.length === 0) {
       this.updateState({ frame: 0 });
       return;
     }
 
-    let newX = this.state.x;
-    let newY = this.state.y;
-    let direction = this.state.direction;
+    const lastKey = this.state.activeKeys[this.state.activeKeys.length - 1];
+    const threshold = TILE_SIZE / 2;
+    let moving = false;
 
-    const row = getTilePosition(this.state.y);
-    const col = getTilePosition(this.state.x);
+    let row =
+      this.state.y % TILE_SIZE > threshold
+        ? Math.ceil(this.state.y / TILE_SIZE)
+        : Math.floor(this.state.y / TILE_SIZE);
 
-    const surroundings = checkCollision(
-      this.state.x,
-      this.state.y,
-      this.props.tiles
-    );
+    let col =
+      this.state.x % TILE_SIZE > threshold
+        ? Math.ceil(this.state.x / TILE_SIZE)
+        : Math.floor(this.state.x / TILE_SIZE);
+
+    let surroundings;
+    let newState = { ...this.state };
 
     switch (lastKey) {
       case "ArrowUp":
       case "w":
+        row = Math.ceil(newState.y / TILE_SIZE);
+        newState.direction = "up";
+        surroundings = checkCollision(row, col, this.props.tiles);
         if (surroundings.up) {
-          direction = "up";
-          newY -= this.state.speed * deltaTime;
+          if (newState.x % TILE_SIZE > threshold) {
+            newState.x = Math.ceil(newState.x / TILE_SIZE) * TILE_SIZE;
+          } else {
+            newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
+          }
+          newState.y -= this.state.speed * deltaTime;
+          moving = true;
         }
         break;
       case "ArrowDown":
       case "s":
-        if (surroundings.down) {
-          direction = "down";
-          newY += this.state.speed * deltaTime;
+        newState.direction = "down";
+        row = Math.floor(newState.y / TILE_SIZE);
+        surroundings = checkCollision(row, col, this.props.tiles);
+        if (surroundings.down) {  
+          if (newState.x % TILE_SIZE > threshold) {
+            newState.x = Math.ceil(newState.x / TILE_SIZE) * TILE_SIZE;
+          } else {
+            newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
+          }
+          newState.y += this.state.speed * deltaTime;
+          moving = true;
         }
         break;
       case "ArrowLeft":
       case "a":
+        newState.direction = "left";
+        col = Math.ceil(newState.x / TILE_SIZE);
+        surroundings = checkCollision(row, col, this.props.tiles);
         if (surroundings.left) {
-          direction = "left";
-          newX -= this.state.speed * deltaTime;
+          if (newState.y % TILE_SIZE > threshold) {
+            newState.y = Math.ceil(newState.y / TILE_SIZE) * TILE_SIZE;
+          } else {
+            newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
+          }
+          newState.x -= this.state.speed * deltaTime;
+          moving = true;
         }
         break;
       case "ArrowRight":
       case "d":
+        newState.direction = "right";
+        col = Math.floor(newState.x / TILE_SIZE);
+        surroundings = checkCollision(row, col, this.props.tiles);
         if (surroundings.right) {
-          direction = "right";
-          newX += this.state.speed * deltaTime;
+          if (newState.y % TILE_SIZE > threshold) {
+            newState.y = Math.ceil(newState.y / TILE_SIZE) * TILE_SIZE;
+          } else {
+            newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
+          }
+          newState.x += this.state.speed * deltaTime;
+          moving = true;
         }
         break;
     }
 
-    const snapThreshold = TILE_SIZE / 4;
-    const xOffset = newX % TILE_SIZE;
-    const yOffset = newY % TILE_SIZE;
-
-    if (xOffset < snapThreshold)
-      newX = Math.floor(newX / TILE_SIZE) * TILE_SIZE;
-    if (xOffset > TILE_SIZE - snapThreshold)
-      newX = Math.ceil(newX / TILE_SIZE) * TILE_SIZE;
-    if (yOffset < snapThreshold)
-      newY = Math.floor(newY / TILE_SIZE) * TILE_SIZE;
-    if (yOffset > TILE_SIZE - snapThreshold)
-      newY = Math.ceil(newY / TILE_SIZE) * TILE_SIZE;
-
-    if (newX !== this.state.x || newY !== this.state.y) {
+    if (moving) {
       const currentTime = performance.now();
-      if (currentTime - this.lastAnimationTime > this.frameInterval) {
-        this.updateState({
-          frame: (this.state.frame + 1) % 4,
-          x: newX,
-          y: newY,
-          direction,
-        });
-        this.lastAnimationTime = currentTime;
-      } else {
-        this.updateState({ x: newX, y: newY, direction });
+      newState.row = Math.round(newState.y / TILE_SIZE);
+      newState.col = Math.round(newState.x / TILE_SIZE);
+
+      if (currentTime - this.state.lastAnimationTime > 150) {
+        newState.frame = (newState.frame + 1) % 4;
+        newState.lastAnimationTime = currentTime;
       }
+
+      // Send position update if this is current player
+      if (this.props.isCurrentPlayer) {
+        this.props.ws.send(JSON.stringify({
+          type: 'player_move',
+          position: {
+            x: newState.x,
+            y: newState.y,
+            direction: newState.direction,
+            frame: newState.frame,
+            nickname: this.props.player.nickname
+          }
+        }));
+      }
+    } else {
+      newState.frame = 0;
     }
+
+    this.updateState(newState);
   },
 
   render() {
-    const spritePosition = `-${this.state.frame * TILE_SIZE}px -${
-      SPRITE_DIRECTIONS[this.state.direction] * TILE_SIZE
+    const spritePosition = `-${
+      (this.props.isCurrentPlayer ? this.state.frame : this.props.player.frame || 0) * TILE_SIZE
+    }px -${
+      SPRITE_DIRECTIONS[this.props.isCurrentPlayer ? this.state.direction : (this.props.player.direction || "down")] * TILE_SIZE
     }px`;
 
     return h(
       "div",
       {
-        className: `player ${this.props.isCurrentPlayer ? "current" : ""} ${
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${
           this.state.isDying ? "player-death" : ""
         }`,
         style: {
-          transform: `translate(${this.props.player.x}px, ${this.props.player.y}px)`,
+          transform: `translate(${this.props.isCurrentPlayer ? this.state.x : this.props.player.x}px, ${
+            this.props.isCurrentPlayer ? this.state.y : this.props.player.y
+          }px)`,
           backgroundPosition: spritePosition,
         },
       },
-      []
+      [h("div", { class: "player-nickname" }, [this.props.player.nickname])]
     );
   },
 });

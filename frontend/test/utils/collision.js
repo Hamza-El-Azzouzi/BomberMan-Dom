@@ -1,9 +1,6 @@
 import { TILE_SIZE } from '../constants/game-constants.js';
 
-export function checkCollision(x, y, tiles) {
-  const row = Math.floor(y / TILE_SIZE);
-  const col = Math.floor(x / TILE_SIZE);
-
+export function checkCollision(row, col, tiles) {  
   return {
     up: row > 0 && isTileWalkable(tiles[row - 1][col]),
     down: row < tiles.length - 1 && isTileWalkable(tiles[row + 1][col]),
@@ -16,6 +13,3 @@ function isTileWalkable(tileType) {
   return tileType === 0 || tileType >= 3;
 }
 
-export function getTilePosition(pixelPos) {
-  return Math.floor(pixelPos / TILE_SIZE);
-}

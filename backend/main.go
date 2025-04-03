@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -15,20 +16,30 @@ var upgrader = websocket.Upgrader{
 }
 
 type Message struct {
-	Type      string       `json:"type"`
-	Nickname  string       `json:"nickname,omitempty"`
-	Message   string       `json:"message,omitempty"`
-	Timestamp int64        `json:"timestamp,omitempty"`
-	Count     int          `json:"count,omitempty"`
-	Seconds   int          `json:"seconds,omitempty"`
-	RoomID    string       `json:"roomId,omitempty"`
-	Players   []PlayerInfo `json:"players,omitempty"`
+	Type      string          `json:"type"`
+	Nickname  string          `json:"nickname,omitempty"`
+	Message   string          `json:"message,omitempty"`
+	Timestamp int64           `json:"timestamp,omitempty"`
+	Count     int             `json:"count,omitempty"`
+	Seconds   int             `json:"seconds,omitempty"`
+	RoomID    string          `json:"roomId,omitempty"`
+	Players   []PlayerInfo    `json:"players,omitempty"`
+	Map       [][]int         `json:"map,omitempty"`
+	Position  *PlayerPosition `json:"position,omitempty"`
 }
 
 type PlayerInfo struct {
 	Nickname string `json:"nickname"`
 	X        int    `json:"x"`
 	Y        int    `json:"y"`
+}
+
+type PlayerPosition struct {
+	X         int    `json:"x"`
+	Y         int    `json:"y"`
+	Direction string `json:"direction"`
+	Frame     int    `json:"frame"`
+	Nickname  string `json:"nickname"`
 }
 
 type Client struct {
@@ -51,7 +62,8 @@ type Room struct {
 	countdown *time.Ticker
 	status    RoomStatus
 	id        string
-	messages  []Message 
+	messages  []Message
+	gameMap   [][]int
 }
 
 type RoomManager struct {
@@ -90,14 +102,72 @@ func (rm *RoomManager) findAvailableRoom() *Room {
 		}
 	}
 
-	room := &Room{
-		clients: make(map[*Client]bool),
-		status:  Waiting,
-		id:      fmt.Sprintf("room_%d", len(rm.rooms)),
-	}
+	room := rm.createRoom()
 	rm.rooms[room.id] = room
 	log.Printf("Created new room: %s", room.id)
 	return room
+}
+
+func (rm *RoomManager) createRoom() *Room {
+	roomID := fmt.Sprintf("room_%d", len(rm.rooms))
+	room := &Room{
+		clients:  make(map[*Client]bool),
+		status:   Waiting,
+		id:       roomID,
+		messages: make([]Message, 0),
+		gameMap:  generateMap(),
+	}
+	return room
+}
+
+func generateMap() [][]int {
+	rows, cols := 13, 15
+	tiles := make([][]int, rows)
+	for i := range tiles {
+		tiles[i] = make([]int, cols)
+	}
+
+	// Generate walls
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			if i == 0 || i == rows-1 || j == 0 || j == cols-1 || (i%2 == 0 && j%2 == 0) {
+				tiles[i][j] = 1 // Wall
+			}
+		}
+	}
+
+	// Generate breakable blocks
+	for i := 1; i < rows-1; i++ {
+		for j := 1; j < cols-1; j++ {
+			if tiles[i][j] == 1 {
+				continue
+			}
+			if rand.Float64() < 0.6 {
+				tiles[i][j] = 2 // Breakable
+			}
+		}
+	}
+
+	// Clear safe zones
+	safeZones := [][2]int{
+		{1, 1},
+		{1, 2},
+		{2, 1},
+		{1, cols - 2},
+		{1, cols - 3},
+		{2, cols - 2},
+		{rows - 2, 1},
+		{rows - 2, 2},
+		{rows - 3, 1},
+		{rows - 2, cols - 2},
+		{rows - 2, cols - 3},
+		{rows - 3, cols - 2},
+	}
+	for _, pos := range safeZones {
+		tiles[pos[0]][pos[1]] = 0
+	}
+
+	return tiles
 }
 
 func main() {
@@ -185,6 +255,18 @@ func (r *Room) wsHandler(w http.ResponseWriter, req *http.Request) {
 			}
 			r.messages = append(r.messages, chatMsg)
 			r.broadcastChatMessage(chatMsg)
+		case "player_move":
+			moveMsg := Message{
+				Type: "player_move",
+				Position: &PlayerPosition{
+					X:         msg.Position.X,
+					Y:         msg.Position.Y,
+					Direction: msg.Position.Direction,
+					Frame:     msg.Position.Frame,
+					Nickname:  client.nickname,
+				},
+			}
+			r.broadcastPlayerMove(moveMsg)
 		}
 	}
 }
@@ -227,6 +309,16 @@ func (r *Room) broadcastChatMessage(msg Message) {
 	}
 }
 
+func (r *Room) broadcastPlayerMove(msg Message) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	for client := range r.clients {
+		if err := client.conn.WriteJSON(msg); err != nil {
+			log.Printf("Error sending player move: %v", err)
+		}
+	}
+}
+
 func (r *Room) checkAutoStart() {
 	r.mutex.Lock()
 	if r.status == InGame {
@@ -242,7 +334,7 @@ func (r *Room) checkAutoStart() {
 	r.mutex.Unlock()
 
 	if count >= 2 && count < 4 {
-		r.startCountdown(20)
+		r.startCountdown(0)
 	} else if count == 4 {
 		r.startCountdown(10)
 	}
@@ -315,7 +407,7 @@ func (r *Room) startGame() {
 		if client.registered {
 			playerInfos = append(playerInfos, PlayerInfo{
 				Nickname: client.nickname,
-				X:        positions[i][0] * 50, 
+				X:        positions[i][0] * 50,
 				Y:        positions[i][1] * 50,
 			})
 			i++
@@ -325,6 +417,7 @@ func (r *Room) startGame() {
 	msg := Message{
 		Type:    "start_game",
 		Players: playerInfos,
+		Map:     r.gameMap,
 	}
 
 	for client := range r.clients {

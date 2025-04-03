@@ -87,63 +87,49 @@ function generateInitialMap() {
 export const MapComponent = defineComponent({
   state() {
     return {
-      tiles: generateInitialMap()
+      tiles: [],
     };
   },
-
   onMounted() {
-    this.emit('map-update', this.state.tiles);
+    this.state.tiles = this.props.tiles;
   },
-
-  destroyBlock(x, y) {
-    const tiles = [...this.state.tiles];
-    if (tiles[y][x] === TILE_TYPES.BREAKABLE) {
-      if (Math.random() < 0.3) {
-        const powerupRoll = Math.random();
-        if (powerupRoll < 0.33) {
-          tiles[y][x] = TILE_TYPES.BOMB_POWERUP;
-        } else if (powerupRoll < 0.66) {
-          tiles[y][x] = TILE_TYPES.FLAME_POWERUP;
-        } else {
-          tiles[y][x] = TILE_TYPES.SPEED_POWERUP;
-        }
-      } else {
-        tiles[y][x] = TILE_TYPES.EMPTY;
-      }
-      this.updateState({ tiles });
-    }
-  },
-
   render() {
-    return h(
-      "div",
-      { class: "game-map" },
-      [
-        ...this.state.tiles.map((row, y) =>
-          h(
-            "div",
-            { class: "row" },
-            row.map((tile, x) => {
-              let className = "cell ";
-              switch (tile) {
-                case TILE_TYPES.WALL: className += "wall"; break;
-                case TILE_TYPES.BREAKABLE: className += "breakable"; break;
-                case TILE_TYPES.BOMB_POWERUP: className += "powerup bomb"; break;
-                case TILE_TYPES.FLAME_POWERUP: className += "powerup flame"; break;
-                case TILE_TYPES.SPEED_POWERUP: className += "powerup speed"; break;
-                default: className += "empty";
-              }
-              return h("div", {
-                class: className,
-                key: `${x}-${y}`,
-                "data-x": x,
-                "data-y": y,
-              });
-            })
-          )
-        ),
-        ...(this.children || [])
-      ]
-    );
+    return h("div", { class: "game-map" }, [
+        ...this.props.tiles.map((row, y) =>
+        h(
+          "div",
+          { class: "row" },
+          row.map((tile, x) => {
+            let className = "cell ";
+            switch (tile) {
+              case TILE_TYPES.WALL:
+                className += "wall";
+                break;
+              case TILE_TYPES.BREAKABLE:
+                className += "breakable";
+                break;
+              case TILE_TYPES.BOMB_POWERUP:
+                className += "powerup bomb";
+                break;
+              case TILE_TYPES.FLAME_POWERUP:
+                className += "powerup flame";
+                break;
+              case TILE_TYPES.SPEED_POWERUP:
+                className += "powerup speed";
+                break;
+              default:
+                className += "empty";
+            }
+            return h("div", {
+              class: className,
+              key: `${x}-${y}`,
+              "data-x": x,
+              "data-y": y,
+            });
+          })
+        )
+      ),
+      ...(this.children || []),
+    ]);
   },
 });

@@ -1,8 +1,0 @@
-.game-map {
-  position: relative;
-  width: 750px;
-  max-width: 750px;
-  height: 650px;
-  max-height: 650px;
-  background-image: url("../assets/empty-space.png");
-}

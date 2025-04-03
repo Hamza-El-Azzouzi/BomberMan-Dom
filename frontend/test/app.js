@@ -7,52 +7,55 @@ import { GameComponent } from "./components/game.js";
 const App = defineComponent({
   state() {
     return {
-      view: 'nickname',
+      view: "nickname",
       nickname: null,
       playerCount: 0,
       countdown: null,
       ws: null,
-      messages: []  
+      messages: [],
+      map: [],
     };
   },
   handleNickname(nickname) {
     if (!nickname.trim()) return;
-    const ws = new WebSocket('ws://localhost:8080/ws');
-    
+    const ws = new WebSocket("ws://localhost:8080/ws");
+
     ws.onopen = () => {
-      ws.send(JSON.stringify({
-        type: 'register',
-        nickname: nickname.trim()
-      }));
-      
-      this.updateState({ 
-        view: 'waiting',
+      ws.send(
+        JSON.stringify({
+          type: "register",
+          nickname: nickname.trim(),
+        })
+      );
+
+      this.updateState({
+        view: "waiting",
         nickname: nickname.trim(),
-        ws: ws
+        ws: ws,
       });
     };
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       switch (data.type) {
-        case 'player_count':
+        case "player_count":
           this.updateState({ playerCount: data.count });
           break;
-        case 'countdown':
+        case "countdown":
           this.updateState({ countdown: data.seconds });
           break;
-        case 'start_game':
-          console.log(data);
-          this.updateState({ 
-            view: 'game',
-            players: data.players 
+        case "start_game":
+          this.updateState({
+            map: data.map,
+            view: "game",
+            players: data.players,
           });
           break;
-        case 'nickname_taken':
-          alert('Nickname already taken!');
+        case "nickname_taken":
+          alert("Nickname already taken!");
           ws.close();
           break;
-        case 'chat':
+        case "chat":
           this.updateState({
             messages: [
               ...this.state.messages,
@@ -68,8 +71,8 @@ const App = defineComponent({
     };
 
     ws.onclose = () => {
-      if (this.state.view !== 'game') {
-        this.updateState({ view: 'nickname' });
+      if (this.state.view !== "game") {
+        this.updateState({ view: "nickname" });
       }
     };
   },
@@ -88,10 +91,11 @@ const App = defineComponent({
             countdown: this.state.countdown,
           });
         case "game":
-          return h(GameComponent, { 
+          return h(GameComponent, {
             nickname: this.state.nickname,
             ws: this.state.ws,
-            players: this.state.players
+            players: this.state.players,
+            map: this.state.map,
           });
         default:
           return h("div", {}, ["Loading..."]);
