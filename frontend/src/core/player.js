@@ -6,6 +6,7 @@ import * as utils from "../utils/collision.js";
 import { bombX, bombY } from "./bomb.js";
 import { decreaseLives, lives } from "../utils/hud.js";
 import { checkSurroundingsPlayerByEnemy } from "../utils/collision.js";
+
 let player;
 
 const activeKeys = [];

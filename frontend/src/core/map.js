@@ -75,10 +75,13 @@ export function MapGenerator() {
     [1, 2],
     [2, 1],
     [1, COLS - 2],
+    [1, COLS - 3],
     [2, COLS - 2],
     [ROWS - 2, 1],
+    [ROWS - 2, 2],
     [ROWS - 3, 1],
     [ROWS - 2, COLS - 2],
+    [ROWS - 2, COLS - 3],
     [ROWS - 3, COLS - 2],
   ];
 
