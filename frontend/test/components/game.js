@@ -33,15 +33,12 @@ export const GameComponent = defineComponent({
             players: data.players,
             tiles: data.map,
           });
-        } else if (data.type === "player_move") {
-          this.handlePlayerMove(data.position);
         }
       };
     }
   },
 
   handlePlayerMove(position) {
-    // Update other players' positions
     this.updateState({
       players: this.state.players.map((p) =>
         p.nickname === position.nickname
@@ -70,7 +67,6 @@ export const GameComponent = defineComponent({
         {
           tiles: this.state.tiles,
         },
-        // Only check for tiles, not mapTiles
         this.state.tiles
           ? this.state.players.map((player) =>
               h(PlayerComponent, {

@@ -56,13 +56,12 @@ export const PlayerComponent = defineComponent({
   handleBombPlacement(event) {
     if (event.key === " " && !this.state.isDying) {
       event.preventDefault();
-      // Implement bomb placement later
+      //todo Implement bomb placement later
     }
   },
 
   killPlayer() {
     this.updateState({ isDying: true });
-    // Add death animation listener
     const resetAfterAnimation = () => {
       this.resetPlayer();
       this.$el.removeEventListener("animationend", resetAfterAnimation);
@@ -129,8 +128,8 @@ export const PlayerComponent = defineComponent({
             newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
           }
           newState.y -= this.state.speed * deltaTime;
-          moving = true;
         }
+        moving = true;
         break;
       case "ArrowDown":
       case "s":
@@ -144,8 +143,8 @@ export const PlayerComponent = defineComponent({
             newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
           }
           newState.y += this.state.speed * deltaTime;
-          moving = true;
         }
+        moving = true;
         break;
       case "ArrowLeft":
       case "a":
@@ -159,8 +158,8 @@ export const PlayerComponent = defineComponent({
             newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
           }
           newState.x -= this.state.speed * deltaTime;
-          moving = true;
         }
+        moving = true;
         break;
       case "ArrowRight":
       case "d":
@@ -174,8 +173,8 @@ export const PlayerComponent = defineComponent({
             newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
           }
           newState.x += this.state.speed * deltaTime;
-          moving = true;
         }
+        moving = true;
         break;
     }
 
@@ -187,20 +186,6 @@ export const PlayerComponent = defineComponent({
       if (currentTime - this.state.lastAnimationTime > 150) {
         newState.frame = (newState.frame + 1) % 4;
         newState.lastAnimationTime = currentTime;
-      }
-
-      // Send position update if this is current player
-      if (this.props.isCurrentPlayer) {
-        this.props.ws.send(JSON.stringify({
-          type: 'player_move',
-          position: {
-            x: newState.x,
-            y: newState.y,
-            direction: newState.direction,
-            frame: newState.frame,
-            nickname: this.props.player.nickname
-          }
-        }));
       }
     } else {
       newState.frame = 0;
@@ -229,7 +214,7 @@ export const PlayerComponent = defineComponent({
           backgroundPosition: spritePosition,
         },
       },
-      [h("div", { class: "player-nickname" }, [this.props.player.nickname])]
+      []
     );
   },
 });

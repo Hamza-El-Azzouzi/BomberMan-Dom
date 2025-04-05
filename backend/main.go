@@ -127,28 +127,25 @@ func generateMap() [][]int {
 		tiles[i] = make([]int, cols)
 	}
 
-	// Generate walls
 	for i := 0; i < rows; i++ {
 		for j := 0; j < cols; j++ {
 			if i == 0 || i == rows-1 || j == 0 || j == cols-1 || (i%2 == 0 && j%2 == 0) {
-				tiles[i][j] = 1 // Wall
+				tiles[i][j] = 1
 			}
 		}
 	}
 
-	// Generate breakable blocks
 	for i := 1; i < rows-1; i++ {
 		for j := 1; j < cols-1; j++ {
 			if tiles[i][j] == 1 {
 				continue
 			}
 			if rand.Float64() < 0.6 {
-				tiles[i][j] = 2 // Breakable
+				tiles[i][j] = 2
 			}
 		}
 	}
 
-	// Clear safe zones
 	safeZones := [][2]int{
 		{1, 1},
 		{1, 2},
@@ -255,18 +252,6 @@ func (r *Room) wsHandler(w http.ResponseWriter, req *http.Request) {
 			}
 			r.messages = append(r.messages, chatMsg)
 			r.broadcastChatMessage(chatMsg)
-		case "player_move":
-			moveMsg := Message{
-				Type: "player_move",
-				Position: &PlayerPosition{
-					X:         msg.Position.X,
-					Y:         msg.Position.Y,
-					Direction: msg.Position.Direction,
-					Frame:     msg.Position.Frame,
-					Nickname:  client.nickname,
-				},
-			}
-			r.broadcastPlayerMove(moveMsg)
 		}
 	}
 }
@@ -305,16 +290,6 @@ func (r *Room) broadcastChatMessage(msg Message) {
 	for client := range r.clients {
 		if err := client.conn.WriteJSON(msg); err != nil {
 			log.Printf("Error sending chat message: %v", err)
-		}
-	}
-}
-
-func (r *Room) broadcastPlayerMove(msg Message) {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-	for client := range r.clients {
-		if err := client.conn.WriteJSON(msg); err != nil {
-			log.Printf("Error sending player move: %v", err)
 		}
 	}
 }
