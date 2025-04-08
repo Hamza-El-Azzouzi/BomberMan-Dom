@@ -33,21 +33,23 @@ export const GameComponent = defineComponent({
             players: data.players,
             tiles: data.map,
           });
+        } else if (data.type === "player_move") {
+          this.handlePlayerMove(data);
         }
       };
     }
   },
 
-  handlePlayerMove(position) {
+  handlePlayerMove(data) {
     this.updateState({
       players: this.state.players.map((p) =>
-        p.nickname === position.nickname
+        p.nickname === data.nickname
           ? {
               ...p,
-              x: position.x,
-              y: position.y,
-              direction: position.direction,
-              frame: position.frame
+              x: data.position.x,
+              y: data.position.y,
+              direction: data.position.direction,
+              frame: data.position.frame
             }
           : p
       ),

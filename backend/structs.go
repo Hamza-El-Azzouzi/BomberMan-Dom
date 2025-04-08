@@ -18,7 +18,6 @@ type Message struct {
 	Players   []PlayerInfo    `json:"players,omitempty"`
 	Map       [][]int         `json:"map,omitempty"`
 	Position  *PlayerPosition `json:"position,omitempty"`
-	
 }
 
 type PlayerInfo struct {
@@ -28,10 +27,10 @@ type PlayerInfo struct {
 }
 
 type PlayerPosition struct {
-	X         int    `json:"x"`
-	Y         int    `json:"y"`
-	Direction string `json:"direction"`
-	Frame     int    `json:"frame"`
+	X         float64 `json:"x"`
+	Y         float64 `json:"y"`
+	Direction string  `json:"direction"`
+	Frame     int     `json:"frame"`
 }
 
 type Client struct {
@@ -49,12 +48,11 @@ type Room struct {
 	id        string
 	messages  []Message
 	gameMap   [][]int
-	Upgrader websocket.Upgrader
-	
+	Upgrader  websocket.Upgrader
 }
 
 type RoomManager struct {
-	rooms map[string]*Room
-	mutex sync.Mutex
+	rooms    map[string]*Room
+	mutex    sync.Mutex
 	Upgrader websocket.Upgrader
 }
