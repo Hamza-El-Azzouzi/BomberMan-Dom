@@ -59,6 +59,8 @@ func (r *Room) wsHandler(w http.ResponseWriter, req *http.Request) {
 			}
 			r.messages = append(r.messages, chatMsg)
 			r.broadcastChatMessage(chatMsg)
+		case "player_move":
+			r.broadcastPlayerMove(msg)
 		}
 	}
 }
@@ -97,6 +99,18 @@ func (r *Room) broadcastChatMessage(msg Message) {
 	for client := range r.clients {
 		if err := client.conn.WriteJSON(msg); err != nil {
 			log.Printf("Error sending chat message: %v", err)
+		}
+	}
+}
+
+func (r *Room) broadcastPlayerMove(msg Message) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	for client := range r.clients {
+		if client.nickname != msg.Nickname {
+			if err := client.conn.WriteJSON(msg); err != nil {
+				log.Printf("Error sending player move: %v", err)
+			}
 		}
 	}
 }

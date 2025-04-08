@@ -7,10 +7,10 @@ export const ChatComponent = defineComponent({
     };
   },
   sendMessage() {
-    if (this.state.message.trim() && this.props.props.ws) {
-      this.props.props.ws.send(
+    if (this.state.message.trim() && this.props.ws) {
+      this.props.ws.send(
         JSON.stringify({
-          nickname: this.props.props.nickname,
+          nickname: this.props.nickname,
           type: "chat",
           message: this.state.message,
         })
@@ -23,8 +23,8 @@ export const ChatComponent = defineComponent({
       h(
         "div",
         { class: "chat-messages" },
-        this.props.props.messages
-          .filter((msg) => msg) 
+        this.props.messages
+          .filter((msg) => msg)
           .map((msg) =>
             h("div", { class: "message" }, [
               h("div", { class: "message-header" }, [
@@ -41,7 +41,14 @@ export const ChatComponent = defineComponent({
         h("input", {
           type: "text",
           value: this.state.message,
-          on: { input: (e) => this.updateState({ message: e.target.value }) },
+          on: {
+            input: (e) => this.updateState({ message: e.target.value }),
+            keydown: (event) => {
+              if (event.key === "Enter"){
+                this.sendMessage()
+              }
+            },
+          },
         }),
         h(
           "button",
