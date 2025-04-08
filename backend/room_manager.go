@@ -3,12 +3,17 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
+
+	"github.com/gorilla/websocket"
 )
 
 func NewRoomManager() *RoomManager {
 	return &RoomManager{
 		rooms: map[string]*Room{},
-		// Upgrader:
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool { return true },
+		},
 	}
 }
 

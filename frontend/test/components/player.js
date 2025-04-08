@@ -117,7 +117,7 @@ export const PlayerComponent = defineComponent({
 
     switch (lastKey) {
       case "ArrowUp":
-      case "w":
+      //case "w":
         row = Math.ceil(newState.y / TILE_SIZE);
         newState.direction = "up";
         surroundings = checkCollision(row, col, this.props.tiles);
@@ -132,7 +132,7 @@ export const PlayerComponent = defineComponent({
         moving = true;
         break;
       case "ArrowDown":
-      case "s":
+      //case "s":
         newState.direction = "down";
         row = Math.floor(newState.y / TILE_SIZE);
         surroundings = checkCollision(row, col, this.props.tiles);
@@ -147,7 +147,7 @@ export const PlayerComponent = defineComponent({
         moving = true;
         break;
       case "ArrowLeft":
-      case "a":
+      //case "a":
         newState.direction = "left";
         col = Math.ceil(newState.x / TILE_SIZE);
         surroundings = checkCollision(row, col, this.props.tiles);
@@ -162,7 +162,7 @@ export const PlayerComponent = defineComponent({
         moving = true;
         break;
       case "ArrowRight":
-      case "d":
+      //case "d":
         newState.direction = "right";
         col = Math.floor(newState.x / TILE_SIZE);
         surroundings = checkCollision(row, col, this.props.tiles);
@@ -187,6 +187,9 @@ export const PlayerComponent = defineComponent({
         newState.frame = (newState.frame + 1) % 4;
         newState.lastAnimationTime = currentTime;
       }
+
+      console.log(this.props.ws);
+      
     } else {
       newState.frame = 0;
     }
