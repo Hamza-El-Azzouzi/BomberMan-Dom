@@ -24,6 +24,8 @@ export const GameComponent = defineComponent({
       ws: this.props.ws,
     });
 
+    this.firstElement.focus();
+
     if (this.props.ws) {
       const existingHandler = this.props.ws.onmessage;
 
