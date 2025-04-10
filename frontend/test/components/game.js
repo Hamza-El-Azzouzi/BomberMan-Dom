@@ -25,13 +25,6 @@ export const GameComponent = defineComponent({
       ws: this.props.ws,
     });
 
-    const gameContainer = document.querySelector(".game-container");
-
-    addEvListener("keydown", this.handleKeyDown.bind(this), gameContainer);
-    addEvListener("keyup", this.handleKeyUp.bind(this), gameContainer);
-
-    gameContainer.focus();
-
     if (this.props.ws) {
       const existingHandler = this.props.ws.onmessage;
 
@@ -97,6 +90,10 @@ export const GameComponent = defineComponent({
       {
         class: "game-container",
         tabIndex: "0",
+        on: {
+          keydown: (event) => this.handleKeyDown(event),
+          keyup: (event) => this.handleKeyUp(event),
+        },
       },
       [
         h(
