@@ -1,5 +1,4 @@
 import {
-  addEvListener,
   defineComponent,
   h,
 } from "../../../framework/src/index.js";
@@ -79,7 +78,7 @@ export const GameComponent = defineComponent({
   },
 
   onMapUpdate(tiles) {
-    if (!this.state.mapTiles) {
+    if (!this.state.tiles) {
       this.updateState({ tiles: tiles });
     }
   },
