@@ -1,4 +1,7 @@
-import { defineComponent, h } from "../../../framework/src/index.js";
+import {
+  defineComponent,
+  h,
+} from "../../../framework/src/index.js";
 import { MapComponent } from "./map.js";
 import { PlayerComponent } from "./player.js";
 
@@ -9,6 +12,7 @@ export const GameComponent = defineComponent({
       currentPlayer: null,
       tiles: [],
       ws: null,
+      activeKeys: [],
     };
   },
 
@@ -19,6 +23,8 @@ export const GameComponent = defineComponent({
       tiles: this.props.map,
       ws: this.props.ws,
     });
+
+    this.firstElement.focus();
 
     if (this.props.ws) {
       const existingHandler = this.props.ws.onmessage;
@@ -40,6 +46,23 @@ export const GameComponent = defineComponent({
     }
   },
 
+  handleKeyDown(event) {
+    if (!this.state.activeKeys.includes(event.key)) {
+      this.updateState({
+        activeKeys: [...this.state.activeKeys, event.key],
+      });
+    }
+  },
+
+  handleKeyUp(event) {
+    const index = this.state.activeKeys.indexOf(event.key);
+    if (index !== -1) {
+      const newKeys = [...this.state.activeKeys];
+      newKeys.splice(index, 1);
+      this.updateState({ activeKeys: newKeys });
+    }
+  },
+
   handlePlayerMove(data) {
     this.updateState({
       players: this.state.players.map((p) =>
@@ -49,7 +72,7 @@ export const GameComponent = defineComponent({
               x: data.position.x,
               y: data.position.y,
               direction: data.position.direction,
-              frame: data.position.frame
+              frame: data.position.frame,
             }
           : p
       ),
@@ -57,30 +80,42 @@ export const GameComponent = defineComponent({
   },
 
   onMapUpdate(tiles) {
-    if (!this.state.mapTiles) {
+    if (!this.state.tiles) {
       this.updateState({ tiles: tiles });
     }
   },
 
   render() {
-    return h("div", { class: "game-container" }, [
-      h(
-        MapComponent,
-        {
-          tiles: this.state.tiles,
+    return h(
+      "div",
+      {
+        class: "game-container",
+        tabIndex: "0",
+        on: {
+          keydown: (event) => this.handleKeyDown(event),
+          keyup: (event) => this.handleKeyUp(event),
         },
-        this.state.tiles
-          ? this.state.players.map((player) =>
-              h(PlayerComponent, {
-                ws: this.state.ws,
-                key: player.nickname,
-                player,
-                tiles: this.state.tiles,
-                isCurrentPlayer: player.nickname === this.state.currentPlayer,
-              })
-            )
-          : []
-      ),
-    ]);
+      },
+      [
+        h(
+          MapComponent,
+          {
+            tiles: this.state.tiles,
+          },
+          this.state.tiles
+            ? this.state.players.map((player) =>
+                h(PlayerComponent, {
+                  ws: this.state.ws,
+                  key: player.nickname,
+                  player,
+                  tiles: this.state.tiles,
+                  isCurrentPlayer: player.nickname === this.state.currentPlayer,
+                  activeKeys: this.state.activeKeys,
+                })
+              )
+            : []
+        ),
+      ]
+    );
   },
 });

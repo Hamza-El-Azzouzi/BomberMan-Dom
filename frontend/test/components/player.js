@@ -11,7 +11,6 @@ export const PlayerComponent = defineComponent({
       frame: 0,
       speed: 150,
       isDying: false,
-      activeKeys: [],
       row: 1,
       col: 1,
       lastAnimationTime: 0,
@@ -26,37 +25,10 @@ export const PlayerComponent = defineComponent({
       frame: this.props.frame || 0,
       direction: this.props.direction || "down",
     });
-    if (this.props.isCurrentPlayer) {
-      document.addEventListener("keydown", this.handleKeyDown.bind(this));
-      document.addEventListener("keyup", this.handleKeyUp.bind(this));
-      document.addEventListener("keydown", this.handleBombPlacement.bind(this));
 
+    if (this.props.isCurrentPlayer) {
       this.animate = this.animate.bind(this);
       requestAnimationFrame(this.animate);
-    }
-  },
-
-  handleKeyDown(event) {
-    if (!this.state.activeKeys.includes(event.key)) {
-      this.updateState({
-        activeKeys: [...this.state.activeKeys, event.key],
-      });
-    }
-  },
-
-  handleKeyUp(event) {
-    const index = this.state.activeKeys.indexOf(event.key);
-    if (index !== -1) {
-      const newKeys = [...this.state.activeKeys];
-      newKeys.splice(index, 1);
-      this.updateState({ activeKeys: newKeys });
-    }
-  },
-
-  handleBombPlacement(event) {
-    if (event.key === " " && !this.state.isDying) {
-      event.preventDefault();
-      //todo Implement bomb placement later
     }
   },
 
@@ -93,12 +65,12 @@ export const PlayerComponent = defineComponent({
   update(deltaTime) {
     if (this.state.isDying) return;
 
-    if (this.state.activeKeys.length === 0) {
+    if (!this.props.activeKeys || this.props.activeKeys.length === 0) {
       this.updateState({ frame: 0 });
       return;
     }
 
-    const lastKey = this.state.activeKeys[this.state.activeKeys.length - 1];
+    const lastKey = this.props.activeKeys[this.props.activeKeys.length - 1];
     const threshold = TILE_SIZE / 2;
     let moving = false;
 
@@ -117,7 +89,7 @@ export const PlayerComponent = defineComponent({
 
     switch (lastKey) {
       case "ArrowUp":
-        //case "w":
+      case "w":
         row = Math.ceil(newState.y / TILE_SIZE);
         newState.direction = "up";
         surroundings = checkCollision(row, col, this.props.tiles);
@@ -132,7 +104,7 @@ export const PlayerComponent = defineComponent({
         moving = true;
         break;
       case "ArrowDown":
-        //case "s":
+      case "s":
         newState.direction = "down";
         row = Math.floor(newState.y / TILE_SIZE);
         surroundings = checkCollision(row, col, this.props.tiles);
@@ -147,7 +119,7 @@ export const PlayerComponent = defineComponent({
         moving = true;
         break;
       case "ArrowLeft":
-        //case "a":
+      case "a":
         newState.direction = "left";
         col = Math.ceil(newState.x / TILE_SIZE);
         surroundings = checkCollision(row, col, this.props.tiles);
@@ -162,7 +134,7 @@ export const PlayerComponent = defineComponent({
         moving = true;
         break;
       case "ArrowRight":
-        //case "d":
+      case "d":
         newState.direction = "right";
         col = Math.floor(newState.x / TILE_SIZE);
         surroundings = checkCollision(row, col, this.props.tiles);
@@ -200,7 +172,6 @@ export const PlayerComponent = defineComponent({
           },
         })
       );
-      console.log(this.props.ws);
     } else {
       newState.frame = 0;
     }
