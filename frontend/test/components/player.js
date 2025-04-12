@@ -159,22 +159,22 @@ export const PlayerComponent = defineComponent({
         newState.frame = (newState.frame + 1) % 4;
         newState.lastAnimationTime = currentTime;
       }
-
-      this.props.ws.send(
-        JSON.stringify({
-          nickname: this.props.player.nickname,
-          type: "player_move",
-          position: {
-            x: newState.x,
-            y: newState.y,
-            frame: newState.frame,
-            direction: newState.direction,
-          },
-        })
-      );
     } else {
       newState.frame = 0;
     }
+
+    this.props.ws.send(
+      JSON.stringify({
+        nickname: this.props.player.nickname,
+        type: "player_move",
+        position: {
+          x: newState.x,
+          y: newState.y,
+          frame: newState.frame,
+          direction: newState.direction,
+        },
+      })
+    );
 
     this.updateState(newState);
   },
