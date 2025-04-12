@@ -15,6 +15,7 @@ export const PlayerComponent = defineComponent({
       col: 1,
       lastAnimationTime: 0,
       moving: false,
+      witness: false,
     };
   },
 
@@ -60,6 +61,21 @@ export const PlayerComponent = defineComponent({
       this.update(deltaTime);
     }
     requestAnimationFrame(this.animate);
+  },
+
+  sendPlayerMoves(newState) {
+    this.props.ws.send(
+      JSON.stringify({
+        nickname: this.props.player.nickname,
+        type: "player_move",
+        position: {
+          x: newState.x,
+          y: newState.y,
+          frame: newState.frame,
+          direction: newState.direction,
+        },
+      })
+    );
   },
 
   update(deltaTime) {
@@ -159,22 +175,14 @@ export const PlayerComponent = defineComponent({
         newState.frame = (newState.frame + 1) % 4;
         newState.lastAnimationTime = currentTime;
       }
-    } else {
-      newState.frame = 0;
+      newState.witness = false;
+      this.sendPlayerMoves(newState);
     }
-
-    this.props.ws.send(
-      JSON.stringify({
-        nickname: this.props.player.nickname,
-        type: "player_move",
-        position: {
-          x: newState.x,
-          y: newState.y,
-          frame: newState.frame,
-          direction: newState.direction,
-        },
-      })
-    );
+    if (!moving && !newState.witness) {
+      newState.frame = 0;
+      newState.witness = true;
+      this.sendPlayerMoves(newState)
+    }
 
     this.updateState(newState);
   },
