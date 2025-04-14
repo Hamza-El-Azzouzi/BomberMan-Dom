@@ -27,8 +27,13 @@ export const GameComponent = defineComponent({
     this.firstElement.focus();
 
     if (this.props.ws) {
+      const existingHandler = this.props.ws.onmessage;
+
       this.props.ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
+        if (existingHandler) {
+          existingHandler(event);
+        }
         if (data.type === "player_move") {
           this.handlePlayerMove(data);
         }
