@@ -21,15 +21,13 @@ export const PlayerComponent = defineComponent({
 
   onMounted() {
     this.updateState({
-      x: this.props.player.x || 0,
-      y: this.props.player.y || 0,
-      frame: this.props.frame || 0,
-      direction: this.props.direction || "down",
+      x: this.props.player.x,
+      y: this.props.player.y,
     });
 
     if (this.props.isCurrentPlayer) {
       this.animate = this.animate.bind(this);
-      requestAnimationFrame(this.animate);
+      this.animate();
     }
   },
 
@@ -81,14 +79,15 @@ export const PlayerComponent = defineComponent({
   update(deltaTime) {
     if (this.state.isDying) return;
 
-    if (!this.props.activeKeys || this.props.activeKeys.length === 0) {
-      this.updateState({ frame: 0 });
+    if (this.props.activeKeys.length === 0 && !this.state.witness) {
+      this.updateState({ frame: 0, witness: true });
+      let newState = { ...this.state };
+      this.sendPlayerMoves(newState);
       return;
     }
 
     const lastKey = this.props.activeKeys[this.props.activeKeys.length - 1];
     const threshold = TILE_SIZE / 2;
-    let moving = false;
 
     let row =
       this.state.y % TILE_SIZE > threshold
@@ -117,7 +116,7 @@ export const PlayerComponent = defineComponent({
           }
           newState.y -= this.state.speed * deltaTime;
         }
-        moving = true;
+        this.state.moving = true;
         break;
       case "ArrowDown":
       case "s":
@@ -132,7 +131,7 @@ export const PlayerComponent = defineComponent({
           }
           newState.y += this.state.speed * deltaTime;
         }
-        moving = true;
+        this.state.moving = true;
         break;
       case "ArrowLeft":
       case "a":
@@ -147,7 +146,7 @@ export const PlayerComponent = defineComponent({
           }
           newState.x -= this.state.speed * deltaTime;
         }
-        moving = true;
+        this.state.moving = true;
         break;
       case "ArrowRight":
       case "d":
@@ -162,11 +161,11 @@ export const PlayerComponent = defineComponent({
           }
           newState.x += this.state.speed * deltaTime;
         }
-        moving = true;
+        this.state.moving = true;
         break;
     }
 
-    if (moving) {
+    if (this.state.moving) {
       const currentTime = performance.now();
       newState.row = Math.round(newState.y / TILE_SIZE);
       newState.col = Math.round(newState.x / TILE_SIZE);
@@ -178,11 +177,6 @@ export const PlayerComponent = defineComponent({
       newState.witness = false;
       this.sendPlayerMoves(newState);
     }
-    if (!moving && !newState.witness) {
-      newState.frame = 0;
-      newState.witness = true;
-      this.sendPlayerMoves(newState)
-    }
 
     this.updateState(newState);
   },
@@ -191,12 +185,12 @@ export const PlayerComponent = defineComponent({
     const spritePosition = `-${
       (this.props.isCurrentPlayer
         ? this.state.frame
-        : this.props.player.frame || 0) * TILE_SIZE
+        : this.props.player.frame) * TILE_SIZE
     }px -${
       SPRITE_DIRECTIONS[
         this.props.isCurrentPlayer
           ? this.state.direction
-          : this.props.player.direction || "down"
+          : this.props.player.direction
       ] * TILE_SIZE
     }px`;
 

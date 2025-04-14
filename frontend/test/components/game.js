@@ -18,8 +18,8 @@ export const GameComponent = defineComponent({
 
   onMounted() {
     this.updateState({
-      players: this.props.players || [],
-      currentPlayer: this.props.nickname || null,
+      players: this.props.players,
+      currentPlayer: this.props.nickname,
       tiles: this.props.map,
       ws: this.props.ws,
     });
@@ -27,19 +27,9 @@ export const GameComponent = defineComponent({
     this.firstElement.focus();
 
     if (this.props.ws) {
-      const existingHandler = this.props.ws.onmessage;
-
       this.props.ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (existingHandler) {
-          existingHandler(event);
-        }
-        if (data.type === "start_game") {
-          this.updateState({
-            players: data.players,
-            tiles: data.map,
-          });
-        } else if (data.type === "player_move") {
+        if (data.type === "player_move") {
           this.handlePlayerMove(data);
         }
       };

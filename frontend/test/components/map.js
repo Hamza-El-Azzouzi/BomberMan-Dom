@@ -10,14 +10,6 @@ const TILE_TYPES = {
 };
 
 export const MapComponent = defineComponent({
-  state() {
-    return {
-      tiles: [],
-    };
-  },
-  onMounted() {
-    this.state.tiles = this.props.tiles;
-  },
   render() {
     return h("div", { class: "game-map" }, [
         ...this.props.tiles.map((row, y) =>
@@ -53,8 +45,7 @@ export const MapComponent = defineComponent({
             });
           })
         )
-      ),
-      ...(this.children || []),
+      )
     ]);
   },
 });
