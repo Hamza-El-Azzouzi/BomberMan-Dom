@@ -71,9 +71,7 @@ const App = defineComponent({
     };
 
     ws.onclose = () => {
-      if (this.state.view !== "game") {
-        this.updateState({ view: "nickname" });
-      }
+      this.updateState({ view: "nickname" });
     };
   },
   render() {
@@ -104,7 +102,11 @@ const App = defineComponent({
 
     const chatComponent =
       this.state.view !== "nickname"
-        ? h(ChatComponent, { ws: this.state.ws, nickname: this.state.nickname,messages: this.state.messages })
+        ? h(ChatComponent, {
+            ws: this.state.ws,
+            nickname: this.state.nickname,
+            messages: this.state.messages,
+          })
         : null;
 
     return h("div", { class: "app-container" }, [mainContent, chatComponent]);

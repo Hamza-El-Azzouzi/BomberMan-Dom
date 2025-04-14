@@ -23,9 +23,7 @@ export const ChatComponent = defineComponent({
       h(
         "div",
         { class: "chat-messages" },
-        this.props.messages
-          .filter((msg) => msg)
-          .map((msg) =>
+        this.props.messages?.map((msg) =>
             h("div", { class: "message" }, [
               h("div", { class: "message-header" }, [
                 h("span", { class: "message-nickname" }, [msg.nickname]),
