@@ -26,6 +26,10 @@ export const PlayerComponent = defineComponent({
   },
 
   onMounted() {
+    if (typeof this.props.ref === 'function') {
+      this.props.ref(this);
+    }
+    
     this.updateState({
       x: this.props.player.x,
       y: this.props.player.y,

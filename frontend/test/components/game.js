@@ -6,7 +6,7 @@ import { MapComponent } from "./map.js";
 import { PlayerComponent } from "./player.js";
 import { BombComponent } from "./bomb.js";
 import { ExplosionComponent } from "./explosion.js";
-import { TILE_TYPES } from "../constants/game-constants.js";
+import { TILE_SIZE, TILE_TYPES } from "../constants/game-constants.js";
 import { calculateExplosion, isPlayerInExplosion, isTileBreakable } from "../utils/collision.js";
 
 export const GameComponent = defineComponent({
@@ -177,8 +177,8 @@ export const GameComponent = defineComponent({
 
     // Check if any player is hit by the explosion
     this.state.players.forEach(player => {
-      const playerRow = Math.round(player.y / 50);
-      const playerCol = Math.round(player.x / 50);
+      const playerRow = Math.round(player.y / TILE_SIZE);
+      const playerCol = Math.round(player.x / TILE_SIZE);
 
       if (isPlayerInExplosion(playerRow, playerCol, explosions)) {
         // Handle player being hit
@@ -200,7 +200,9 @@ export const GameComponent = defineComponent({
     if (explosionData.owner === this.state.currentPlayer) {
       const playerComponent = this.getPlayerComponent(this.state.currentPlayer);
       if (playerComponent) {
-        playerComponent.handleBombCompleted();
+        setTimeout(() => {
+          playerComponent.handleBombCompleted();
+        }, 1000)
       }
     }
   },
@@ -230,7 +232,7 @@ export const GameComponent = defineComponent({
     // Find the player component and trigger kill animation
     const playerComponent = this.getPlayerComponent(data.nickname);
     if (playerComponent) {
-      playerComponent.killPlayer();
+      // playerComponent.killPlayer();
     }
   },
 
@@ -249,12 +251,6 @@ export const GameComponent = defineComponent({
     // This method will be used to access player component instances
     // The component reference will be available after rendering
     return this[`player-${nickname}`];
-  },
-
-  onMapUpdate(tiles) {
-    if (!this.state.tiles) {
-      this.updateState({ tiles: tiles });
-    }
   },
 
   render() {
