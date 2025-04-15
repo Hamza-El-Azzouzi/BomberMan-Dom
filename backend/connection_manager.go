@@ -129,7 +129,7 @@ func (r *Room) checkAutoStart() {
 	}
 	r.mutex.Unlock()
 
-	if count >= 2 && count < 4 {
+	if count >= 1 && count < 4 {
 		r.startCountdown(0)
 	} else if count == 4 {
 		r.startCountdown(10)
