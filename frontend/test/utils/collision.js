@@ -11,7 +11,7 @@ export function checkCollision(row, col, tiles) {
 
 export function isTileWalkable(tileType) {
   return tileType === TILE_TYPES.EMPTY ||
-    (tileType >= TILE_TYPES.BOMB_POWERUP && tileType <= TILE_TYPES.SPEED_POWERUP) || (tileType === TILE_TYPES.BOMB);
+    (tileType >= TILE_TYPES.BOMB_POWERUP && tileType <= TILE_TYPES.SPEED_POWERUP);
 }
 
 export function isTileBreakable(tileType) {

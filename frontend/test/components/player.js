@@ -197,6 +197,8 @@ export const PlayerComponent = defineComponent({
             newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
           }
           newState.y -= this.state.speed * deltaTime;
+        } else {
+          newState.y = Math.ceil(newState.y / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -212,6 +214,8 @@ export const PlayerComponent = defineComponent({
             newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
           }
           newState.y += this.state.speed * deltaTime;
+        } else {
+          newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -227,6 +231,8 @@ export const PlayerComponent = defineComponent({
             newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
           }
           newState.x -= this.state.speed * deltaTime;
+        } else {
+          newState.x = Math.ceil(newState.x / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -242,6 +248,8 @@ export const PlayerComponent = defineComponent({
             newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
           }
           newState.x += this.state.speed * deltaTime;
+        } else {
+          newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -272,8 +280,9 @@ export const PlayerComponent = defineComponent({
   },
 
   hitPlayer() {
-    this.updateState({ isDying: true });
-    // Optional: Add respawn logic or game over handling
+    console.log("Player hit");
+
+    // this.updateState({ isDying: true });
   },
 
   render() {

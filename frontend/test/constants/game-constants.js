@@ -20,8 +20,7 @@ export const TILE_TYPES = {
   BOMB_POWERUP: 3,
   FLAME_POWERUP: 4,
   SPEED_POWERUP: 5,
-  BOMB: 6,
-  DOOR: 7
+  BOMB: 6
 };
 
 export const EXPLOSION_DIRECTIONS = [
