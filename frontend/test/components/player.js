@@ -29,7 +29,7 @@ export const PlayerComponent = defineComponent({
     if (typeof this.props.ref === 'function') {
       this.props.ref(this);
     }
-    
+
     this.updateState({
       x: this.props.player.x,
       y: this.props.player.y,
@@ -83,29 +83,29 @@ export const PlayerComponent = defineComponent({
     if (this.state.bombsPlaced >= this.state.bombLimit) {
       return;
     }
-    
+
     // Calculate grid position
-    const row = Math.round(this.state.y / TILE_SIZE );
-    const col = Math.round(this.state.x / TILE_SIZE );
-    
+    const row = Math.round(this.state.y / TILE_SIZE);
+    const col = Math.round(this.state.x / TILE_SIZE);
+
 
     // Check if there's already a bomb or wall here
     if (!canPlaceBomb(row, col, this.props.tiles)) {
       return;
     }
-    
+
     // Check bomb cooldown
     const currentTime = performance.now();
     if (currentTime - this.state.lastBombTime < this.state.bombCooldown) {
       return;
     }
-    
+
     // Update state
-    this.updateState({ 
+    this.updateState({
       bombsPlaced: this.state.bombsPlaced + 1,
       lastBombTime: currentTime
     });
-    
+
     // Emit bomb placement event
     this.emit("bomb-placed", {
       row,
@@ -113,7 +113,7 @@ export const PlayerComponent = defineComponent({
       range: this.state.bombRange,
       nickname: this.props.player.nickname
     });
-    
+
     // Notify other players via WebSocket
     this.props.ws.send(
       JSON.stringify({
@@ -160,13 +160,12 @@ export const PlayerComponent = defineComponent({
     if (this.props.activeKeys.includes(" ")) {
       this.placeBomb();
       // Remove spacebar from active keys to prevent continuous bomb placement
-      const index = this.props.activeKeys.indexOf(" ") !== -1 
-        ? this.props.activeKeys.indexOf(" ") 
+      const index = this.props.activeKeys.indexOf(" ") !== -1
+        ? this.props.activeKeys.indexOf(" ")
         : this.props.activeKeys.indexOf("Spacebar");
       if (index !== -1) {
         this.props.activeKeys.splice(index, 1);
       }
-      return
     }
 
     const lastKey = this.props.activeKeys[this.props.activeKeys.length - 1];
@@ -262,33 +261,29 @@ export const PlayerComponent = defineComponent({
     }
 
     this.updateState(newState);
+    this.emit("update-player", {newState});
   },
 
   render() {
-    const spritePosition = `-${
-      (this.props.isCurrentPlayer
+    const spritePosition = `-${(this.props.isCurrentPlayer
         ? this.state.frame
         : this.props.player.frame) * TILE_SIZE
-    }px -${
-      SPRITE_DIRECTIONS[
-        this.props.isCurrentPlayer
-          ? this.state.direction
-          : this.props.player.direction
+      }px -${SPRITE_DIRECTIONS[
+      this.props.isCurrentPlayer
+        ? this.state.direction
+        : this.props.player.direction
       ] * TILE_SIZE
-    }px`;
+      }px`;
 
     return h(
       "div",
       {
-        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${
-          this.state.isDying ? "player-death" : ""
-        }`,
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.isDying ? "player-death" : ""
+          }`,
         style: {
-          transform: `translate(${
-            this.props.isCurrentPlayer ? this.state.x : this.props.player.x
-          }px, ${
-            this.props.isCurrentPlayer ? this.state.y : this.props.player.y
-          }px)`,
+          transform: `translate(${this.props.isCurrentPlayer ? this.state.x : this.props.player.x
+            }px, ${this.props.isCurrentPlayer ? this.state.y : this.props.player.y
+            }px)`,
           backgroundPosition: spritePosition,
         },
       },

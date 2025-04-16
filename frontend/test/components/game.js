@@ -177,13 +177,12 @@ export const GameComponent = defineComponent({
 
     // Check if any player is hit by the explosion
     this.state.players.forEach(player => {
-      const playerRow = Math.round(player.y / TILE_SIZE);
-      const playerCol = Math.round(player.x / TILE_SIZE);
+      if (player.nickname === this.state.currentPlayer) {
+        const playerRow = Math.round(player.y / TILE_SIZE);
+        const playerCol = Math.round(player.x / TILE_SIZE);
 
-      if (isPlayerInExplosion(playerRow, playerCol, explosions)) {
-        // Handle player being hit
-        if (player.nickname === this.state.currentPlayer) {
-          this.getPlayerComponent(player.nickname).killPlayer();
+        if (isPlayerInExplosion(playerRow, playerCol, explosions)) {
+          this.getPlayerComponent(player.nickname).hitPlayer();
 
           // Notify other players
           this.props.ws.send(

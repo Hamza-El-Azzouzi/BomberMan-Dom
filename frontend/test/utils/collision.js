@@ -34,14 +34,12 @@ export function calculateExplosion(row, col, range, tiles) {
     for (let i = 1; i <= range; i++) {
       const newRow = row + (dir.dr * i);
       const newCol = col + (dir.dc * i);
+      const tileType = tiles[newRow][newCol];
 
       // Check if out of bounds
-      if (newRow < 0 || newRow >= tiles.length ||
-        newCol < 0 || newCol >= tiles[0].length) {
+      if (tileType === TILE_TYPES.WALL) {
         break;
       }
-
-      const tileType = tiles[newRow][newCol];
 
       // Add explosion at this position
       explosions.push({
@@ -51,7 +49,7 @@ export function calculateExplosion(row, col, range, tiles) {
       });
 
       // Stop if hit a wall or breakable object
-      if (tileType === TILE_TYPES.WALL || tileType === TILE_TYPES.BREAKABLE) {
+      if (tileType === TILE_TYPES.BREAKABLE) {
         break;
       }
     }
@@ -63,7 +61,6 @@ export function calculateExplosion(row, col, range, tiles) {
 // Check if the player's position matches any explosion tile
 export function isPlayerInExplosion(playerRow, playerCol, explosions) {
   return explosions.some(explosion =>
-    Math.abs(playerRow - explosion.row) < 0.5 &&
-    Math.abs(playerCol - explosion.col) < 0.5
+    playerRow === explosion.row && playerCol === explosion.col
   );
 }

@@ -16,6 +16,8 @@ export const NicknameEntry = defineComponent({
       h("form", { on: { submit: (e) => this.handleSubmit(e) } }, [
         h("input", {
           type: "text",
+          autofocus: true,
+          placeholder: "Nickname",
           value: this.state.nickname,
           on: { input: (e) => this.updateState({ nickname: e.target.value }) },
         }),
