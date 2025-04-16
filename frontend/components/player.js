@@ -1,4 +1,4 @@
-import { defineComponent, h } from "../../../framework/src/index.js";
+import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
 import { TILE_SIZE, SPRITE_DIRECTIONS } from "../constants/game-constants.js";
 import { checkCollision } from "../utils/collision.js";
 

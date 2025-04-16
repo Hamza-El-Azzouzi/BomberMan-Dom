@@ -1,4 +1,4 @@
-import { defineComponent, h } from "./../../../framework/src/index.js";
+import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
 
 export const ChatComponent = defineComponent({
   state() {
