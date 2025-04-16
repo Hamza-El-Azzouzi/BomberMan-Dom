@@ -261,13 +261,25 @@ export const PlayerComponent = defineComponent({
     }
 
     this.updateState(newState);
-    this.emit("update-player", {newState});
+    this.emit("update-player", {
+      newState: {
+        x: newState.x,
+        y: newState.y,
+        row: newState.row,
+        col: newState.col
+      }
+    });
+  },
+
+  hitPlayer() {
+    this.updateState({ isDying: true });
+    // Optional: Add respawn logic or game over handling
   },
 
   render() {
     const spritePosition = `-${(this.props.isCurrentPlayer
-        ? this.state.frame
-        : this.props.player.frame) * TILE_SIZE
+      ? this.state.frame
+      : this.props.player.frame) * TILE_SIZE
       }px -${SPRITE_DIRECTIONS[
       this.props.isCurrentPlayer
         ? this.state.direction

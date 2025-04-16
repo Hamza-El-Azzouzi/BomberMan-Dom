@@ -252,6 +252,20 @@ export const GameComponent = defineComponent({
     return this[`player-${nickname}`];
   },
 
+  handlePlayerUpdate(data) {
+    this.updateState({
+      players: this.state.players.map(player => 
+        player.nickname === this.state.currentPlayer
+          ? { 
+              ...player,
+              x: data.newState.x,
+              y: data.newState.y
+            }
+          : player
+      )
+    });
+  },
+
   render() {
     return h(
       "div",
@@ -283,7 +297,8 @@ export const GameComponent = defineComponent({
                   this[`player-${player.nickname}`] = component;
                 },
                 on: {
-                  "bomb-placed": (bombData) => this.handleBombPlaced(bombData)
+                  "bomb-placed": (bombData) => this.handleBombPlaced(bombData),
+                  "update-player": (data) => this.handlePlayerUpdate(data)
                 }
               })
             ),
