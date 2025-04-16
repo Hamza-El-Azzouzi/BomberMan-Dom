@@ -1,4 +1,4 @@
-import { defineComponent, h } from "../../framework/src/index.js";
+import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
 import { NicknameEntry } from "./components/nickname-entry.js";
 import { WaitingRoom } from "./components/waiting-room.js";
 import { ChatComponent } from "./components/chat.js";

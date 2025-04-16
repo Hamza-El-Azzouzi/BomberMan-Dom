@@ -1,7 +1,7 @@
 import {
   defineComponent,
   h,
-} from "../../../framework/src/index.js";
+} from "https://unpkg.com/obsydianjs@latest";
 import { MapComponent } from "./map.js";
 import { PlayerComponent } from "./player.js";
 
