@@ -8,7 +8,8 @@ import { BombComponent } from "./bomb.js";
 import { ExplosionComponent } from "./explosion.js";
 import { TILE_SIZE, TILE_TYPES } from "../constants/game-constants.js";
 import { calculateExplosion, isPlayerInExplosion, isTileBreakable } from "../utils/collision.js";
-import { getRandomAbility } from "../utils/abilities.js";
+import { getRandomAbility } from "../utils/abilities.js"
+import { AbilityComponent } from "./ability.js";
 
 export const GameComponent = defineComponent({
   state() {
@@ -20,6 +21,7 @@ export const GameComponent = defineComponent({
       activeKeys: [],
       bombs: [],
       explosions: [],
+      abilities: [],
     };
   },
 
@@ -276,6 +278,17 @@ export const GameComponent = defineComponent({
     });
   },
 
+  handlePickupAbility(data) {
+    const ability = this.state.abilities.find(ability => ability.id === data.id);
+    if (ability) {
+      const newAbilities = this.state.abilities.filter(a => a.id !== data.id);
+      this.updateState({
+        abilities: newAbilities
+      });
+      // TODO : Notify other players about the ability pickup using ws
+    }
+  },
+
   render() {
     return h(
       "div",
@@ -303,11 +316,13 @@ export const GameComponent = defineComponent({
                 tiles: this.state.tiles,
                 isCurrentPlayer: player.nickname === this.state.currentPlayer,
                 activeKeys: this.state.activeKeys,
+                abilities: this.state.abilities,
                 ref: (component) => {
                   this[`player-${player.nickname}`] = component;
                 },
                 on: {
                   "bomb-placed": (bombData) => this.handleBombPlaced(bombData),
+                  "ability-pickup": (data) => this.handlePickupAbility(data),
                   "update-player": (data) => this.handlePlayerUpdate(data)
                 }
               })
@@ -339,7 +354,15 @@ export const GameComponent = defineComponent({
                   "explosion-complete": (data) => this.handleExplosionComplete(data)
                 }
               })
-            )
+            ),
+            ...this.state.abilities.map(ability =>
+              h(AbilityComponent, {
+                key: ability.id,
+                row: ability.row,
+                col: ability.col,
+                type: ability.type,
+              })
+            ),
           ]
         ),
       ]

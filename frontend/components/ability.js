@@ -1,4 +1,4 @@
-import { defineComponent, h } from "../../../framework/src/index.js";
+import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
 import { TILE_SIZE } from "../constants/game-constants.js";
 
 export const AbilityComponent = defineComponent({
