@@ -8,6 +8,7 @@ import { BombComponent } from "./bomb.js";
 import { ExplosionComponent } from "./explosion.js";
 import { TILE_SIZE, TILE_TYPES } from "../constants/game-constants.js";
 import { calculateExplosion, isPlayerInExplosion, isTileBreakable } from "../utils/collision.js";
+import { getRandomAbility } from "../utils/abilities.js";
 
 export const GameComponent = defineComponent({
   state() {
@@ -153,6 +154,16 @@ export const GameComponent = defineComponent({
       // Check if explosion hits a destructible block
       if (isTileBreakable(newTiles[explosion.row][explosion.col])) {
         newTiles[explosion.row][explosion.col] = TILE_TYPES.EMPTY;
+
+        const ability = getRandomAbility()
+        if (ability) {
+          this.state.abilities.push({
+            row: explosion.row,
+            col: explosion.col,
+            type: ability,
+            id: `ability-${Date.now()}-${explosion.row}-${explosion.col}`,
+          });
+        }
 
         // Broadcast block destruction
         this.props.ws.send(
