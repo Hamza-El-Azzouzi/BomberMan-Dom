@@ -583,3 +583,25 @@ body {
     transform: rotate(360deg) scale(0);
   }
 }
+
+.ability-container {
+  border: red solid 1px;
+}
+
+.ability {
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}

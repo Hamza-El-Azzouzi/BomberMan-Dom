@@ -302,7 +302,7 @@ export const PlayerComponent = defineComponent({
     };
 
     switch (powerupType) {
-      case "bomb":
+      case "bombs":
         newPowerup.bombLimit += 1;
         console.log(`Bomb limit increased to ${newPowerup.bombLimit}`);
         break;
