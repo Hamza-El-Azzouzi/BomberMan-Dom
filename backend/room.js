@@ -65,6 +65,21 @@ export class Room {
                 break;
             case "ability":
                 this.broadcastAbility(msg);
+                break;
+            case 'bomb_placed':
+                this.broadcastBombExplosion(msg);
+                break;
+            case 'explosion':
+                this.broadcastBombExplosion(msg);
+                break;
+        }
+    }
+
+    broadcastBombExplosion(msg) {
+        for (const [ws, client] of this.clients) {
+            if (client.nickname !== msg.nickname) {
+                ws.send(JSON.stringify(msg));
+            }
         }
     }
 
@@ -92,8 +107,6 @@ export class Room {
     }
 
     broadcastAbility(msg) {
-        console.log(msg);
-        
         for (const [ws, client] of this.clients) {
             if (client.nickname !== msg.nickname) {
                 ws.send(JSON.stringify(msg));

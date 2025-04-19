@@ -48,9 +48,20 @@ export const GameComponent = defineComponent({
             this.handlePlayerMove(data);
             break;
           case "bomb_placed":
-            if (data.nickname !== this.state.currentPlayer) {
-              this.handleRemoteBombPlaced(data);
-            }
+            this.handleBombPlaced({
+              row: data.position.row,
+              col: data.position.col,
+              range: data.position.range,
+              nickname: data.nickname
+            });
+            break;
+          case "explosion":
+            this.handleExplosion({
+              row: data.row,
+              col: data.col,
+              range: data.range,
+              owner: data.owner
+            });
             break;
           case "block_destroyed":
             this.handleBlockDestroyed(data);
@@ -62,10 +73,8 @@ export const GameComponent = defineComponent({
             this.handleCommingAbilities(data)
             break;
           default:
-            console.log(data);
-
+            console.log("Unhandled message:", data);
         }
-
       };
     }
   },
@@ -118,9 +127,26 @@ export const GameComponent = defineComponent({
   },
 
   handleBombPlaced(bombData) {
+    // If this is the local player's bomb, broadcast to other players
+    if (bombData.nickname === this.state.currentPlayer) {
+      this.props.ws.send(
+        JSON.stringify({
+          type: "bomb_placed",
+          nickname: bombData.nickname,
+          position: {
+            row: bombData.row,
+            col: bombData.col,
+            range: bombData.range,
+          }
+        })
+      );
+    }
+
     const newBombs = [...this.state.bombs];
+    const bombId = `bomb-${Date.now()}-${bombData.row}-${bombData.col}`;
+
     newBombs.push({
-      id: `bomb-${Date.now()}-${bombData.row}-${bombData.col}`,
+      id: bombId,
       row: bombData.row,
       col: bombData.col,
       range: bombData.range,
@@ -138,16 +164,20 @@ export const GameComponent = defineComponent({
     });
   },
 
-  handleRemoteBombPlaced(data) {
-    this.handleBombPlaced({
-      row: data.position.row,
-      col: data.position.col,
-      range: data.position.range,
-      nickname: data.nickname
-    });
-  },
-
   handleExplosion(explosionData) {
+    if (explosionData.owner === this.state.currentPlayer) {
+      // this.state.ws.send(
+      //   JSON.stringify({
+      //     type: "explosion",
+      //     owner: this.state.currentPlayer,
+      //     nickname: this.state.currentPlayer,
+      //     row: explosionData.row,
+      //     col: explosionData.col,
+      //     range: explosionData.range
+      //   })
+      // );
+    }
+    
     const { row, col, range } = explosionData;
 
     // Remove the bomb
@@ -161,7 +191,8 @@ export const GameComponent = defineComponent({
 
     // Calculate explosion area
     const explosions = calculateExplosion(row, col, range, this.state.tiles);
-
+    console.log(explosions);
+    
     // Process each explosion tile
     explosions.forEach(explosion => {
       const newExplosions = [...this.state.explosions];
@@ -176,39 +207,28 @@ export const GameComponent = defineComponent({
       // Check if explosion hits a destructible block
       if (isTileBreakable(newTiles[explosion.row][explosion.col])) {
         newTiles[explosion.row][explosion.col] = TILE_TYPES.EMPTY;
-
-        const abilityType = getRandomAbility()
-        if (abilityType) {
-          const ability = {
-            row: explosion.row,
-            col: explosion.col,
-            type: abilityType,
-            id: `ability-${Date.now()}-${explosion.row}-${explosion.col}`,
-          }
-
-          this.state.abilities.push(ability);
-
-          this.props.ws.send(
-            JSON.stringify({
-              type: "ability",
-              ability: ability,
-              action: "add",
-              nickname: this.state.currentPlayer
-            })
-          );
-        }
-
-        // Broadcast block destruction
-        this.props.ws.send(
-          JSON.stringify({
-            type: "block_destroyed",
-            position: {
+        if (explosionData.owner === this.state.currentPlayer) {
+          const abilityType = getRandomAbility()
+          if (abilityType) {
+            const ability = {
               row: explosion.row,
               col: explosion.col,
-              newTile: newTiles[explosion.row][explosion.col]
+              type: abilityType,
+              id: `ability-${Date.now()}-${explosion.row}-${explosion.col}`,
             }
-          })
-        );
+
+            this.state.abilities.push(ability);
+
+            this.props.ws.send(
+              JSON.stringify({
+                type: "ability",
+                ability: ability,
+                action: "add",
+                nickname: this.state.currentPlayer
+              })
+            );
+          }
+        }
       }
 
       this.updateState({
@@ -371,6 +391,7 @@ export const GameComponent = defineComponent({
             // Render bombs
             ...this.state.bombs.map(bomb =>
               h(BombComponent, {
+                ws: this.state.ws,
                 key: bomb.id,
                 row: bomb.row,
                 col: bomb.col,

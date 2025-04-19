@@ -108,18 +108,6 @@ export const PlayerComponent = defineComponent({
       range: this.state.bombRange,
       nickname: this.props.player.nickname
     });
-
-    this.props.ws.send(
-      JSON.stringify({
-        type: "bomb_placed",
-        nickname: this.props.player.nickname,
-        position: {
-          row,
-          col,
-          range: this.state.bombRange
-        }
-      })
-    );
   },
 
   handleBombCompleted() {

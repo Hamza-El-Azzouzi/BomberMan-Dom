@@ -16,6 +16,7 @@ export const BombComponent = defineComponent({
 
     explode() {
         this.emit("explosion", {
+            owner: this.props.owner,
             row: this.props.row,
             col: this.props.col,
             range: this.props.range || 1
