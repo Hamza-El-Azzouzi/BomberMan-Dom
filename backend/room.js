@@ -63,6 +63,8 @@ export class Room {
             case 'player_move':
                 this.broadcastPlayerMove(msg);
                 break;
+            case "ability":
+                this.broadcastAbility(msg);
         }
     }
 
@@ -82,6 +84,16 @@ export class Room {
     }
 
     broadcastPlayerMove(msg) {
+        for (const [ws, client] of this.clients) {
+            if (client.nickname !== msg.nickname) {
+                ws.send(JSON.stringify(msg));
+            }
+        }
+    }
+
+    broadcastAbility(msg) {
+        console.log(msg);
+        
         for (const [ws, client] of this.clients) {
             if (client.nickname !== msg.nickname) {
                 ws.send(JSON.stringify(msg));

@@ -58,9 +58,29 @@ export const GameComponent = defineComponent({
           case "player_hit":
             this.handlePlayerHit(data);
             break;
+          case "ability":
+            this.handleCommingAbilities(data)
+            break;
+          default:
+            console.log(data);
+
         }
 
       };
+    }
+  },
+
+  handleCommingAbilities(data) {
+    switch (data.action) {
+      case "add":
+        this.state.abilities.push(data.ability);
+        break;
+      case "remove":
+        const newAbilities = this.state.abilities.filter(a => a.id !== data.ability.id);
+        this.updateState({
+          abilities: newAbilities
+        });
+        break;
     }
   },
 
@@ -157,14 +177,25 @@ export const GameComponent = defineComponent({
       if (isTileBreakable(newTiles[explosion.row][explosion.col])) {
         newTiles[explosion.row][explosion.col] = TILE_TYPES.EMPTY;
 
-        const ability = getRandomAbility()
-        if (ability) {
-          this.state.abilities.push({
+        const abilityType = getRandomAbility()
+        if (abilityType) {
+          const ability = {
             row: explosion.row,
             col: explosion.col,
-            type: ability,
+            type: abilityType,
             id: `ability-${Date.now()}-${explosion.row}-${explosion.col}`,
-          });
+          }
+
+          this.state.abilities.push(ability);
+
+          this.props.ws.send(
+            JSON.stringify({
+              type: "ability",
+              ability: ability,
+              action: "add",
+              nickname: this.state.currentPlayer
+            })
+          );
         }
 
         // Broadcast block destruction
@@ -286,6 +317,15 @@ export const GameComponent = defineComponent({
         abilities: newAbilities
       });
       // TODO : Notify other players about the ability pickup using ws
+
+      this.props.ws.send(
+        JSON.stringify({
+          type: "ability",
+          ability: ability,
+          action: "remove",
+          nickname: this.state.currentPlayer
+        })
+      );
     }
   },
 
