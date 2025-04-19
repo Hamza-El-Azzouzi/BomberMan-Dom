@@ -1,6 +1,7 @@
 import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
 import { TILE_SIZE, SPRITE_DIRECTIONS, BOMB_CONFIG } from "../constants/game-constants.js";
 import { checkCollision, canPlaceBomb } from "../utils/collision.js";
+import { isPlayerIntheAbilityTile } from "../utils/abilities.js";
 
 export const PlayerComponent = defineComponent({
   state() {
@@ -125,20 +126,6 @@ export const PlayerComponent = defineComponent({
     this.updateState({ bombsPlaced: Math.max(0, this.state.bombsPlaced - 1) });
   },
 
-  upgrade(powerupType) {
-    switch (powerupType) {
-      case 3: // Bomb powerup
-        this.updateState({ bombLimit: this.state.bombLimit + 1 });
-        break;
-      case 4: // Flame powerup
-        this.updateState({ bombRange: this.state.bombRange + 1 });
-        break;
-      case 5: // Speed powerup
-        this.updateState({ speed: this.state.speed + 25 });
-        break;
-    }
-  },
-
   update(deltaTime) {
     if (this.state.isDying) return;
 
@@ -257,6 +244,15 @@ export const PlayerComponent = defineComponent({
         newState.lastAnimationTime = currentTime;
       }
       newState.witness = false;
+
+      let newAbilities = this.checkAbilityPickup(this.props.abilities)
+      if (newAbilities) {
+        newState.bombLimit = newAbilities.bombLimit;
+        newState.bombRange = newAbilities.bombRange;
+        newState.speed = newAbilities.speed;
+      }
+      // console.log(`speed : ${this.state.speed} | bombLimit: ${this.state.bombLimit} | bombRange: ${this.state.bombRange}`);
+
       this.sendPlayerMoves(newState);
     }
 
@@ -273,6 +269,56 @@ export const PlayerComponent = defineComponent({
 
   hitPlayer() {
     console.log("Player hit");
+  },
+
+  // check if the olayer pickup the ability
+  checkAbilityPickup(abilities) {
+    if (Array.isArray(abilities)) {
+      for (const ability of abilities) {
+        if (isPlayerIntheAbilityTile(this.state.row, this.state.col, ability)) {
+          let newAbilities = this.upgrade(ability.type);
+
+          // Tell the game component about the pickup
+          this.emit("ability-pickup", {
+            id: ability.id,
+            nickname: this.props.player.nickname,
+            type: ability.type
+          });
+
+          return newAbilities;
+        }
+      }
+    }
+
+    return null;
+  },
+
+  // check the type of the powerup and return the abilites upgraded
+  upgrade(powerupType) {
+    let newPowerup = {
+      bombLimit: this.state.bombLimit,
+      bombRange: this.state.bombRange,
+      speed: this.state.speed,
+    };
+
+    switch (powerupType) {
+      case "bomb":
+        newPowerup.bombLimit += 1;
+        console.log(`Bomb limit increased to ${newPowerup.bombLimit}`);
+        break;
+      case "flames":
+        newPowerup.bombRange += 1;
+        console.log(`Bomb range increased to ${newPowerup.bombRange}`);
+        break;
+      case "speed":
+        newPowerup.speed += 50;
+        console.log(`Speed increased to ${newPowerup.speed}`);
+        break;
+    }
+
+    // this.updateState(newPowerup);
+
+    return newPowerup;
   },
 
   render() {
