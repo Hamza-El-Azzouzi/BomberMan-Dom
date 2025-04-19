@@ -1,18 +1,10 @@
 import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
-
-const TILE_TYPES = {
-  EMPTY: 0,
-  WALL: 1,
-  BREAKABLE: 2,
-  BOMB_POWERUP: 3,
-  FLAME_POWERUP: 4,
-  SPEED_POWERUP: 5,
-};
+import { TILE_TYPES } from "../constants/game-constants.js";
 
 export const MapComponent = defineComponent({
   render() {
     return h("div", { class: "game-map" }, [
-        ...this.props.tiles.map((row, y) =>
+      ...this.props.tiles.map((row, y) =>
         h(
           "div",
           { class: "row" },

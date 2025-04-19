@@ -103,10 +103,10 @@ const App = defineComponent({
     const chatComponent =
       this.state.view !== "nickname"
         ? h(ChatComponent, {
-            ws: this.state.ws,
-            nickname: this.state.nickname,
-            messages: this.state.messages,
-          })
+          ws: this.state.ws,
+          nickname: this.state.nickname,
+          messages: this.state.messages,
+        })
         : null;
 
     return h("div", { class: "app-container" }, [mainContent, chatComponent]);

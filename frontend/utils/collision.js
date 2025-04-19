@@ -1,6 +1,6 @@
-import { TILE_SIZE } from '../constants/game-constants.js';
+import { EXPLOSION_DIRECTIONS, TILE_TYPES } from '../constants/game-constants.js';
 
-export function checkCollision(row, col, tiles) {  
+export function checkCollision(row, col, tiles) {
   return {
     up: row > 0 && isTileWalkable(tiles[row - 1][col]),
     down: row < tiles.length - 1 && isTileWalkable(tiles[row + 1][col]),
@@ -9,7 +9,58 @@ export function checkCollision(row, col, tiles) {
   };
 }
 
-function isTileWalkable(tileType) {
-  return tileType === 0 || tileType >= 3;
+export function isTileWalkable(tileType) {
+  return tileType === TILE_TYPES.EMPTY ||
+    (tileType >= TILE_TYPES.BOMB_POWERUP && tileType <= TILE_TYPES.SPEED_POWERUP);
 }
 
+export function isTileBreakable(tileType) {
+  return tileType === TILE_TYPES.BREAKABLE;
+}
+
+// Check if the tile is empty and walkable
+export function canPlaceBomb(row, col, tiles) {
+  return tiles[row][col] === TILE_TYPES.EMPTY;
+}
+
+export function calculateExplosion(row, col, range, tiles) {
+  const explosions = [];
+
+  // Add center explosion
+  explosions.push({ row, col, direction: 'center' });
+
+  EXPLOSION_DIRECTIONS.forEach(dir => {
+    // Check each tile in the explosion range
+    for (let i = 1; i <= range; i++) {
+      const newRow = row + (dir.dr * i);
+      const newCol = col + (dir.dc * i);
+      const tileType = tiles[newRow][newCol];
+
+      // Check if out of bounds
+      if (tileType === TILE_TYPES.WALL) {
+        break;
+      }
+
+      // Add explosion at this position
+      explosions.push({
+        row: newRow,
+        col: newCol,
+        direction: dir.name
+      });
+
+      // Stop if hit a wall or breakable object
+      if (tileType === TILE_TYPES.BREAKABLE) {
+        break;
+      }
+    }
+  });
+
+  return explosions;
+}
+
+// Check if the player's position matches any explosion tile
+export function isPlayerInExplosion(playerRow, playerCol, explosions) {
+  return explosions.some(explosion =>
+    playerRow === explosion.row && playerCol === explosion.col
+  );
+}

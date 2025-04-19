@@ -1,6 +1,6 @@
 import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
-import { TILE_SIZE, SPRITE_DIRECTIONS } from "../constants/game-constants.js";
-import { checkCollision } from "../utils/collision.js";
+import { TILE_SIZE, SPRITE_DIRECTIONS, BOMB_CONFIG } from "../constants/game-constants.js";
+import { checkCollision, canPlaceBomb } from "../utils/collision.js";
 
 export const PlayerComponent = defineComponent({
   state() {
@@ -16,10 +16,20 @@ export const PlayerComponent = defineComponent({
       lastAnimationTime: 0,
       moving: false,
       witness: false,
+      // Bomb-related state
+      bombLimit: BOMB_CONFIG.defaultLimit,
+      bombsPlaced: 0,
+      bombRange: BOMB_CONFIG.defaultRange,
+      lastBombTime: 0,
+      bombCooldown: 500  // Prevent rapid bomb placement
     };
   },
 
   onMounted() {
+    if (typeof this.props.ref === 'function') {
+      this.props.ref(this);
+    }
+
     this.updateState({
       x: this.props.player.x,
       y: this.props.player.y,
@@ -31,15 +41,6 @@ export const PlayerComponent = defineComponent({
     }
   },
 
-  killPlayer() {
-    this.updateState({ isDying: true });
-    const resetAfterAnimation = () => {
-      this.resetPlayer();
-      this.$el.removeEventListener("animationend", resetAfterAnimation);
-    };
-    this.$el.addEventListener("animationend", resetAfterAnimation);
-  },
-
   resetPlayer() {
     this.updateState({
       isDying: false,
@@ -49,6 +50,7 @@ export const PlayerComponent = defineComponent({
       row: 1,
       direction: "down",
       frame: 0,
+      bombsPlaced: 0
     });
   },
 
@@ -76,6 +78,67 @@ export const PlayerComponent = defineComponent({
     );
   },
 
+  placeBomb() {
+    if (this.state.bombsPlaced >= this.state.bombLimit) {
+      return;
+    }
+
+    const row = Math.round(this.state.y / TILE_SIZE);
+    const col = Math.round(this.state.x / TILE_SIZE);
+
+
+    if (!canPlaceBomb(row, col, this.props.tiles)) {
+      return;
+    }
+
+    const currentTime = performance.now();
+    if (currentTime - this.state.lastBombTime < this.state.bombCooldown) {
+      return;
+    }
+
+    this.updateState({
+      bombsPlaced: this.state.bombsPlaced + 1,
+      lastBombTime: currentTime
+    });
+
+    this.emit("bomb-placed", {
+      row,
+      col,
+      range: this.state.bombRange,
+      nickname: this.props.player.nickname
+    });
+
+    this.props.ws.send(
+      JSON.stringify({
+        type: "bomb_placed",
+        nickname: this.props.player.nickname,
+        position: {
+          row,
+          col,
+          range: this.state.bombRange
+        }
+      })
+    );
+  },
+
+  handleBombCompleted() {
+    this.updateState({ bombsPlaced: Math.max(0, this.state.bombsPlaced - 1) });
+  },
+
+  upgrade(powerupType) {
+    switch (powerupType) {
+      case 3: // Bomb powerup
+        this.updateState({ bombLimit: this.state.bombLimit + 1 });
+        break;
+      case 4: // Flame powerup
+        this.updateState({ bombRange: this.state.bombRange + 1 });
+        break;
+      case 5: // Speed powerup
+        this.updateState({ speed: this.state.speed + 25 });
+        break;
+    }
+  },
+
   update(deltaTime) {
     if (this.state.isDying) return;
 
@@ -84,6 +147,17 @@ export const PlayerComponent = defineComponent({
       let newState = { ...this.state };
       this.sendPlayerMoves(newState);
       return;
+    }
+
+    if (this.props.activeKeys.includes(" ")) {
+      this.placeBomb();
+      // Remove spacebar from active keys to prevent continuous bomb placement
+      const index = this.props.activeKeys.indexOf(" ") !== -1
+        ? this.props.activeKeys.indexOf(" ")
+        : this.props.activeKeys.indexOf("Spacebar");
+      if (index !== -1) {
+        this.props.activeKeys.splice(index, 1);
+      }
     }
 
     const lastKey = this.props.activeKeys[this.props.activeKeys.length - 1];
@@ -115,6 +189,8 @@ export const PlayerComponent = defineComponent({
             newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
           }
           newState.y -= this.state.speed * deltaTime;
+        } else {
+          newState.y = Math.ceil(newState.y / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -130,6 +206,8 @@ export const PlayerComponent = defineComponent({
             newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
           }
           newState.y += this.state.speed * deltaTime;
+        } else {
+          newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -145,6 +223,8 @@ export const PlayerComponent = defineComponent({
             newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
           }
           newState.x -= this.state.speed * deltaTime;
+        } else {
+          newState.x = Math.ceil(newState.x / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -160,6 +240,8 @@ export const PlayerComponent = defineComponent({
             newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
           }
           newState.x += this.state.speed * deltaTime;
+        } else {
+          newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -179,33 +261,40 @@ export const PlayerComponent = defineComponent({
     }
 
     this.updateState(newState);
+    this.emit("update-player", {
+      newState: {
+        x: newState.x,
+        y: newState.y,
+        row: newState.row,
+        col: newState.col
+      }
+    });
+  },
+
+  hitPlayer() {
+    console.log("Player hit");
   },
 
   render() {
-    const spritePosition = `-${
-      (this.props.isCurrentPlayer
-        ? this.state.frame
-        : this.props.player.frame) * TILE_SIZE
-    }px -${
-      SPRITE_DIRECTIONS[
-        this.props.isCurrentPlayer
-          ? this.state.direction
-          : this.props.player.direction
+    const spritePosition = `-${(this.props.isCurrentPlayer
+      ? this.state.frame
+      : this.props.player.frame) * TILE_SIZE
+      }px -${SPRITE_DIRECTIONS[
+      this.props.isCurrentPlayer
+        ? this.state.direction
+        : this.props.player.direction
       ] * TILE_SIZE
-    }px`;
+      }px`;
 
     return h(
       "div",
       {
-        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${
-          this.state.isDying ? "player-death" : ""
-        }`,
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.isDying ? "player-death" : ""
+          }`,
         style: {
-          transform: `translate(${
-            this.props.isCurrentPlayer ? this.state.x : this.props.player.x
-          }px, ${
-            this.props.isCurrentPlayer ? this.state.y : this.props.player.y
-          }px)`,
+          transform: `translate(${this.props.isCurrentPlayer ? this.state.x : this.props.player.x
+            }px, ${this.props.isCurrentPlayer ? this.state.y : this.props.player.y
+            }px)`,
           backgroundPosition: spritePosition,
         },
       },

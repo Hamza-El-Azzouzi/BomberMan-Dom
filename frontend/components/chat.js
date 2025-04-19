@@ -24,16 +24,16 @@ export const ChatComponent = defineComponent({
         "div",
         { class: "chat-messages" },
         this.props.messages?.map((msg) =>
-            h("div", { class: "message" }, [
-              h("div", { class: "message-header" }, [
-                h("span", { class: "message-nickname" }, [msg.nickname]),
-                h("span", { class: "message-time" }, [
-                  new Date(msg.timestamp).toLocaleTimeString(),
-                ]),
+          h("div", { class: "message" }, [
+            h("div", { class: "message-header" }, [
+              h("span", { class: "message-nickname" }, [msg.nickname]),
+              h("span", { class: "message-time" }, [
+                new Date(msg.timestamp).toLocaleTimeString(),
               ]),
-              h("div", { class: "message-content" }, [msg.message]),
-            ])
-          )
+            ]),
+            h("div", { class: "message-content" }, [msg.message]),
+          ])
+        )
       ),
       h("div", { class: "chat-input" }, [
         h("input", {
@@ -42,7 +42,7 @@ export const ChatComponent = defineComponent({
           on: {
             input: (e) => this.updateState({ message: e.target.value }),
             keydown: (event) => {
-              if (event.key === "Enter"){
+              if (event.key === "Enter") {
                 this.sendMessage()
               }
             },
