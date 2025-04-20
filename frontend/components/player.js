@@ -1,5 +1,9 @@
 import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
-import { TILE_SIZE, SPRITE_DIRECTIONS, BOMB_CONFIG } from "../constants/game-constants.js";
+import {
+  TILE_SIZE,
+  SPRITE_DIRECTIONS,
+  BOMB_CONFIG,
+} from "../constants/game-constants.js";
 import { checkCollision, canPlaceBomb } from "../utils/collision.js";
 import { isPlayerIntheAbilityTile } from "../utils/abilities.js";
 
@@ -17,17 +21,16 @@ export const PlayerComponent = defineComponent({
       lastAnimationTime: 0,
       moving: false,
       witness: false,
-      // Bomb-related state
       bombLimit: BOMB_CONFIG.defaultLimit,
       bombsPlaced: 0,
       bombRange: BOMB_CONFIG.defaultRange,
       lastBombTime: 0,
-      bombCooldown: 500  // Prevent rapid bomb placement
+      bombCooldown: 500,
     };
   },
 
   onMounted() {
-    if (typeof this.props.ref === 'function') {
+    if (typeof this.props.ref === "function") {
       this.props.ref(this);
     }
 
@@ -51,7 +54,7 @@ export const PlayerComponent = defineComponent({
       row: 1,
       direction: "down",
       frame: 0,
-      bombsPlaced: 0
+      bombsPlaced: 0,
     });
   },
 
@@ -87,7 +90,6 @@ export const PlayerComponent = defineComponent({
     const row = Math.round(this.state.y / TILE_SIZE);
     const col = Math.round(this.state.x / TILE_SIZE);
 
-
     if (!canPlaceBomb(row, col, this.props.tiles)) {
       return;
     }
@@ -99,14 +101,14 @@ export const PlayerComponent = defineComponent({
 
     this.updateState({
       bombsPlaced: this.state.bombsPlaced + 1,
-      lastBombTime: currentTime
+      lastBombTime: currentTime,
     });
 
     this.emit("bomb-placed", {
       row,
       col,
       range: this.state.bombRange,
-      nickname: this.props.player.nickname
+      nickname: this.props.player.nickname,
     });
   },
 
@@ -126,10 +128,10 @@ export const PlayerComponent = defineComponent({
 
     if (this.props.activeKeys.includes(" ")) {
       this.placeBomb();
-      // Remove spacebar from active keys to prevent continuous bomb placement
-      const index = this.props.activeKeys.indexOf(" ") !== -1
-        ? this.props.activeKeys.indexOf(" ")
-        : this.props.activeKeys.indexOf("Spacebar");
+      const index =
+        this.props.activeKeys.indexOf(" ") !== -1
+          ? this.props.activeKeys.indexOf(" ")
+          : this.props.activeKeys.indexOf("Spacebar");
       if (index !== -1) {
         this.props.activeKeys.splice(index, 1);
       }
@@ -233,15 +235,16 @@ export const PlayerComponent = defineComponent({
       }
       newState.witness = false;
 
-      let newAbilities = this.checkAbilityPickup(this.props.abilities)
+      let newAbilities = this.checkAbilityPickup(this.props.abilities);
       if (newAbilities) {
         newState.bombLimit = newAbilities.bombLimit;
         newState.bombRange = newAbilities.bombRange;
         newState.speed = newAbilities.speed;
       }
-      // console.log(`speed : ${this.state.speed} | bombLimit: ${this.state.bombLimit} | bombRange: ${this.state.bombRange}`);
 
       this.sendPlayerMoves(newState);
+    } else {
+      newState.frame = 0;
     }
 
     this.updateState(newState);
@@ -250,8 +253,8 @@ export const PlayerComponent = defineComponent({
         x: newState.x,
         y: newState.y,
         row: newState.row,
-        col: newState.col
-      }
+        col: newState.col,
+      },
     });
   },
 
@@ -259,18 +262,16 @@ export const PlayerComponent = defineComponent({
     console.log("Player hit");
   },
 
-  // check if the olayer pickup the ability
   checkAbilityPickup(abilities) {
     if (Array.isArray(abilities)) {
       for (const ability of abilities) {
         if (isPlayerIntheAbilityTile(this.state.row, this.state.col, ability)) {
           let newAbilities = this.upgrade(ability.type);
 
-          // Tell the game component about the pickup
           this.emit("ability-pickup", {
             id: ability.id,
             nickname: this.props.player.nickname,
-            type: ability.type
+            type: ability.type,
           });
 
           return newAbilities;
@@ -281,7 +282,6 @@ export const PlayerComponent = defineComponent({
     return null;
   },
 
-  // check the type of the powerup and return the abilites upgraded
   upgrade(powerupType) {
     let newPowerup = {
       bombLimit: this.state.bombLimit,
@@ -304,31 +304,34 @@ export const PlayerComponent = defineComponent({
         break;
     }
 
-    // this.updateState(newPowerup);
-
     return newPowerup;
   },
 
   render() {
-    const spritePosition = `-${(this.props.isCurrentPlayer
-      ? this.state.frame
-      : this.props.player.frame) * TILE_SIZE
-      }px -${SPRITE_DIRECTIONS[
-      this.props.isCurrentPlayer
-        ? this.state.direction
-        : this.props.player.direction
+    const spritePosition = `-${
+      (this.props.isCurrentPlayer
+        ? this.state.frame
+        : this.props.player.frame) * TILE_SIZE
+    }px -${
+      SPRITE_DIRECTIONS[
+        this.props.isCurrentPlayer
+          ? this.state.direction
+          : this.props.player.direction
       ] * TILE_SIZE
-      }px`;
+    }px`;
 
     return h(
       "div",
       {
-        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.isDying ? "player-death" : ""
-          }`,
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${
+          this.state.isDying ? "player-death" : ""
+        }`,
         style: {
-          transform: `translate(${this.props.isCurrentPlayer ? this.state.x : this.props.player.x
-            }px, ${this.props.isCurrentPlayer ? this.state.y : this.props.player.y
-            }px)`,
+          transform: `translate(${
+            this.props.isCurrentPlayer ? this.state.x : this.props.player.x
+          }px, ${
+            this.props.isCurrentPlayer ? this.state.y : this.props.player.y
+          }px)`,
           backgroundPosition: spritePosition,
         },
       },

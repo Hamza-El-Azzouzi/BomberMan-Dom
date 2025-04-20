@@ -127,7 +127,6 @@ export const GameComponent = defineComponent({
   },
 
   handleBombPlaced(bombData) {
-    // If this is the local player's bomb, broadcast to other players
     if (bombData.nickname === this.state.currentPlayer) {
       this.props.ws.send(
         JSON.stringify({
@@ -154,7 +153,6 @@ export const GameComponent = defineComponent({
       timestamp: Date.now()
     });
 
-    // Update the tiles grid to mark bomb position
     const newTiles = [...this.state.tiles];
     newTiles[bombData.row][bombData.col] = TILE_TYPES.BOMB;
 
@@ -165,35 +163,15 @@ export const GameComponent = defineComponent({
   },
 
   handleExplosion(explosionData) {
-    if (explosionData.owner === this.state.currentPlayer) {
-      // this.state.ws.send(
-      //   JSON.stringify({
-      //     type: "explosion",
-      //     owner: this.state.currentPlayer,
-      //     nickname: this.state.currentPlayer,
-      //     row: explosionData.row,
-      //     col: explosionData.col,
-      //     range: explosionData.range
-      //   })
-      // );
-    }
-    
     const { row, col, range } = explosionData;
-
-    // Remove the bomb
     const newBombs = this.state.bombs.filter(
       bomb => !(bomb.row === row && bomb.col === col)
     );
-
-    // Update the tile to be empty instead of bomb
     const newTiles = [...this.state.tiles];
     newTiles[row][col] = TILE_TYPES.EMPTY;
-
-    // Calculate explosion area
     const explosions = calculateExplosion(row, col, range, this.state.tiles);
     console.log(explosions);
     
-    // Process each explosion tile
     explosions.forEach(explosion => {
       const newExplosions = [...this.state.explosions];
       newExplosions.push({
@@ -204,7 +182,6 @@ export const GameComponent = defineComponent({
         timestamp: Date.now()
       });
 
-      // Check if explosion hits a destructible block
       if (isTileBreakable(newTiles[explosion.row][explosion.col])) {
         newTiles[explosion.row][explosion.col] = TILE_TYPES.EMPTY;
         if (explosionData.owner === this.state.currentPlayer) {
@@ -238,7 +215,6 @@ export const GameComponent = defineComponent({
       });
     });
 
-    // Check if any player is hit by the explosion
     this.state.players.forEach(player => {
       if (player.nickname === this.state.currentPlayer) {
         const playerRow = Math.round(player.y / TILE_SIZE);
@@ -247,7 +223,6 @@ export const GameComponent = defineComponent({
         if (isPlayerInExplosion(playerRow, playerCol, explosions)) {
           this.getPlayerComponent(player.nickname).hitPlayer();
 
-          // Notify other players
           this.props.ws.send(
             JSON.stringify({
               type: "player_hit",
@@ -258,7 +233,6 @@ export const GameComponent = defineComponent({
       }
     });
 
-    // If this explosion was from current player's bomb, update their bomb count
     if (explosionData.owner === this.state.currentPlayer) {
       const playerComponent = this.getPlayerComponent(this.state.currentPlayer);
       if (playerComponent) {
@@ -270,7 +244,6 @@ export const GameComponent = defineComponent({
   },
 
   handleExplosionComplete(explosionData) {
-    // Remove explosion from the list
     const newExplosions = this.state.explosions.filter(
       explosion => !(explosion.row === explosionData.row && explosion.col === explosionData.col)
     );
@@ -281,7 +254,6 @@ export const GameComponent = defineComponent({
   },
 
   handleBlockDestroyed(data) {
-    // Update the tile
     const newTiles = [...this.state.tiles];
     newTiles[data.position.row][data.position.col] = data.position.newTile;
 
@@ -291,7 +263,6 @@ export const GameComponent = defineComponent({
   },
 
   handlePlayerHit(data) {
-    // Find the player component and trigger kill animation
     const playerComponent = this.getPlayerComponent(data.nickname);
     if (playerComponent) {
       // playerComponent.killPlayer();
@@ -299,7 +270,6 @@ export const GameComponent = defineComponent({
   },
 
   handleBombRemoved(bombData) {
-    // Remove bomb from the state
     const newBombs = this.state.bombs.filter(
       bomb => !(bomb.row === bombData.row && bomb.col === bombData.col)
     );
@@ -310,8 +280,6 @@ export const GameComponent = defineComponent({
   },
 
   getPlayerComponent(nickname) {
-    // This method will be used to access player component instances
-    // The component reference will be available after rendering
     return this[`player-${nickname}`];
   },
 
@@ -367,7 +335,6 @@ export const GameComponent = defineComponent({
             tiles: this.state.tiles,
           },
           [
-            // Render players
             ...this.state.players.map((player) =>
               h(PlayerComponent, {
                 ws: this.state.ws,
@@ -388,7 +355,6 @@ export const GameComponent = defineComponent({
               })
             ),
 
-            // Render bombs
             ...this.state.bombs.map(bomb =>
               h(BombComponent, {
                 ws: this.state.ws,
@@ -404,7 +370,6 @@ export const GameComponent = defineComponent({
               })
             ),
 
-            // Render explosions
             ...this.state.explosions.map(explosion =>
               h(ExplosionComponent, {
                 key: explosion.id,

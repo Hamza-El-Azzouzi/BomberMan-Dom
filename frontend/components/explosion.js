@@ -6,8 +6,9 @@ export const ExplosionComponent = defineComponent({
         return {
             frame: 0,
             totalFrames: 16,
-            duration: BOMB_CONFIG.explosionDuration, // 1.6 seconds
-            frameInterval: 100, // 100ms per frame
+            duration: BOMB_CONFIG.explosionDuration, 
+            frameInterval: 100, 
+            intervalId: null
         };
     },
 
@@ -22,19 +23,25 @@ export const ExplosionComponent = defineComponent({
         }, this.state.duration);
     },
 
+    onUnmounted() {
+        if (this.state.intervalId) {
+            clearInterval(this.state.intervalId);
+        }
+    },
+
     animateExplosion() {
-        setInterval(() => {
+        const intervalId = setInterval(() => {
             if (this.state.frame < this.state.totalFrames - 1) {
                 this.updateState({ frame: this.state.frame + 1 });
             }
         }, this.state.frameInterval);
+        this.updateState({ intervalId });
     },
 
     render() {
         const row = Math.floor(this.state.frame / 4);
         const col = this.state.frame % 4;
 
-        // Calculate sprite position based on the current frame
         const backgroundPosition = `-${col * TILE_SIZE}px -${row * TILE_SIZE}px`;
 
         let className = "explosion";
