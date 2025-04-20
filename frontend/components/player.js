@@ -166,7 +166,7 @@ export const PlayerComponent = defineComponent({
             newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
           }
           newState.y -= this.state.speed * deltaTime;
-        } else {
+        } else if (this.props.tiles[row - 1][col] !== 6) {
           newState.y = Math.ceil(newState.y / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
@@ -183,7 +183,7 @@ export const PlayerComponent = defineComponent({
             newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
           }
           newState.y += this.state.speed * deltaTime;
-        } else {
+        } else if (this.props.tiles[row + 1][col] !== 6) {
           newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
@@ -200,7 +200,7 @@ export const PlayerComponent = defineComponent({
             newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
           }
           newState.x -= this.state.speed * deltaTime;
-        } else {
+        } else if (this.props.tiles[row][col - 1] !== 6) {
           newState.x = Math.ceil(newState.x / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
@@ -217,7 +217,7 @@ export const PlayerComponent = defineComponent({
             newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
           }
           newState.x += this.state.speed * deltaTime;
-        } else {
+        } else if (this.props.tiles[row][col + 1] !== 6) {
           newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;

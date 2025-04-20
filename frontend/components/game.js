@@ -170,7 +170,6 @@ export const GameComponent = defineComponent({
     const newTiles = [...this.state.tiles];
     newTiles[row][col] = TILE_TYPES.EMPTY;
     const explosions = calculateExplosion(row, col, range, this.state.tiles);
-    console.log(explosions);
     
     explosions.forEach(explosion => {
       const newExplosions = [...this.state.explosions];
