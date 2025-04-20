@@ -143,7 +143,7 @@ export class Room {
 
         const count = this.getRegisteredPlayersCount();
         if (count >= 2 && count < 4) {
-            this.startCountdown(0);
+            this.startCountdown(2);
         } else if (count === 4) {
             this.startCountdown(10);
         }

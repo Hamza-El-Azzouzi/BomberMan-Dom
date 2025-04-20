@@ -42,6 +42,9 @@ const App = defineComponent({
           this.updateState({ playerCount: data.count });
           break;
         case "countdown":
+          if (data.seconds === 0) {
+            return;
+          }
           this.updateState({ countdown: data.seconds });
           break;
         case "start_game":
@@ -103,10 +106,10 @@ const App = defineComponent({
     const chatComponent =
       this.state.view !== "nickname"
         ? h(ChatComponent, {
-          ws: this.state.ws,
-          nickname: this.state.nickname,
-          messages: this.state.messages,
-        })
+            ws: this.state.ws,
+            nickname: this.state.nickname,
+            messages: this.state.messages,
+          })
         : null;
 
     return h("div", { class: "app-container" }, [mainContent, chatComponent]);
