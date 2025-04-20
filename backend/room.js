@@ -118,7 +118,7 @@ export class Room {
 
         const count = this.getRegisteredPlayersCount();
         if (count >= 2 && count < 4) {
-            this.startCountdown(0);
+            this.startCountdown(5);
         } else if (count === 4) {
             this.startCountdown(10);
         }
@@ -130,11 +130,15 @@ export class Room {
         }
 
         let countdown = seconds;
+        this.broadcast({
+            type:"star_count_down",
+            count : seconds
+        })
         this.countdown = setInterval(() => {
-            this.broadcast({
-                type: 'countdown',
-                seconds: countdown
-            });
+            // this.broadcast({
+            //     type: 'countdown',
+            //     seconds: countdown
+            // });
 
             if (countdown <= 0) {
                 clearInterval(this.countdown);

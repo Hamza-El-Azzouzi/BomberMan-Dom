@@ -41,7 +41,7 @@ const App = defineComponent({
         case "player_count":
           this.updateState({ playerCount: data.count });
           break;
-        case "countdown":
+        case "star_count_down":
           this.updateState({ countdown: data.seconds });
           break;
         case "start_game":
@@ -55,6 +55,7 @@ const App = defineComponent({
           alert("Nickname already taken!");
           ws.close();
           break;
+        
         case "chat":
           this.updateState({
             messages: [
