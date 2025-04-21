@@ -142,7 +142,7 @@ export class Room {
         if (this.status === 'ingame') return;
 
         const count = this.getRegisteredPlayersCount();
-        if (count >= 2 && count < 4) {
+        if (count >= 1 && count < 4) {
             this.startCountdown(2);
         } else if (count === 4) {
             this.startCountdown(10);
