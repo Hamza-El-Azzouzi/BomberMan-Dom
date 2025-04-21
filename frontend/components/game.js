@@ -17,19 +17,30 @@ export const GameComponent = defineComponent({
     return {
       players: [],
       currentPlayer: null,
+      currentPlayerData: {},
       tiles: [],
       ws: null,
       activeKeys: [],
       bombs: [],
       explosions: [],
       abilities: [],
+      lives: 2,
     };
   },
 
   onMounted() {
+    let currentPlayerData
+
+    this.props.players.forEach(player => {
+      if (player.nickname === this.props.nickname) {
+        currentPlayerData = player;
+      }
+    });
+
     this.updateState({
       players: this.props.players,
       currentPlayer: this.props.nickname,
+      currentPlayerData: currentPlayerData,
       tiles: this.props.map,
       ws: this.props.ws,
     });
@@ -297,6 +308,21 @@ export const GameComponent = defineComponent({
     });
   },
 
+  handlePlayerGetKilled(nickname) {
+    if (this.state.lives > 1) {
+      this.updateState({
+        lives: this.state.lives - 1
+      })
+    } else {
+      const newPlayers = this.state.players.filter(player => player.nickname != nickname)
+
+      this.updateState({
+        players: newPlayers,
+        lives: 0
+      })
+    }
+  },
+
   handlePickupAbility(data) {
     const ability = this.state.abilities.find(ability => ability.id === data.id);
     if (ability) {
@@ -330,8 +356,8 @@ export const GameComponent = defineComponent({
       },
       [
         h(HudComponent, {
-          players: this.state.players,
-          currentPlayer: this.state.currentPlayer,
+          currentPlayer: this.state.currentPlayerData,
+          lives: this.state.lives,
         }),
         h(
           MapComponent,
@@ -354,7 +380,8 @@ export const GameComponent = defineComponent({
                 on: {
                   "bomb-placed": (bombData) => this.handleBombPlaced(bombData),
                   "ability-pickup": (data) => this.handlePickupAbility(data),
-                  "update-player": (data) => this.handlePlayerUpdate(data)
+                  "update-player": (data) => this.handlePlayerUpdate(data),
+                  "player-killed": (nickname) => this.handlePlayerGetKilled(nickname),
                 }
               })
             ),

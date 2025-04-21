@@ -44,7 +44,6 @@ body {
 .hud-timer {
   font-weight: bold;
   font-size: 22px;
-  margin: auto;
   animation: timer-float 2s ease-in-out infinite;
 }
 
@@ -71,14 +70,20 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(30, 30, 30, 0.6);
   padding: 5px 10px;
   border-radius: 10px;
-  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
 }
 
 .hud-player.me {
-  border: 2px solid gold;
+  display: flex;
+  gap: 15px;
+  flex-direction: row;
+}
+
+.game-hud .player-character {
+  width: 50px;
+  height: 50px;
+
 }
 
 .player-name {

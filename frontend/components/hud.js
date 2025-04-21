@@ -5,16 +5,11 @@ export const HudComponent = defineComponent({
         return {
             startTime: Date.now(),
             elapsedTime: "00:00",
-            players: [],
-            currentPlayer: null,
+            currentPlayer: {},
         };
     },
 
     onMounted() {
-        this.updateState({
-            players: this.props.players,
-            currentPlayer: this.props.nickname,
-        });
 
         this.interval = setInterval(() => {
             const now = Date.now();
@@ -31,21 +26,23 @@ export const HudComponent = defineComponent({
 
     render() {
         return h("div", { class: "game-hud" }, [
-            h("div", { class: "hud-timer" }, [
-                h('span', { class: "animated-clock" },['⏱️']),
-                `${this.state.elapsedTime}`
+
+            h("div", {
+                class: `hud-player ${"me"}`
+            }, [
+                h("div", {
+                    class: "player-character",
+                    style: {
+                        backgroundImage: `url("./assets/players/player-${this.props.currentPlayer.character}.png")`,
+                    },
+                }),
+                h("span", { class: "player-lives" },
+                    [this.props.lives ? Array(this.props.lives).fill("❤️").join(" ") : "You lost !"]
+                )
             ]),
 
-            // h("div", { class: "hud-players" }, this.props.players.map(player =>
-            //     h("div", {
-            //         class: `hud-player ${player.nickname === this.props.currentPlayer ? "me" : ""}`
-            //     }, [
-            //         h("span", { class: "player-name" }, player.nickname),
-            //         // h("span", { class: "player-lives" },
-            //         //     Array(player.lives ?? 3).fill("❤️").join(" ")
-            //         // )
-            //     ])
-            // ))
+            h("div", { class: "hud-timer" }, [`⏱️ ${this.state.elapsedTime}`
+            ]),
         ]);
     }
 });

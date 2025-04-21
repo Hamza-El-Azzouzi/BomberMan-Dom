@@ -261,7 +261,7 @@ export const PlayerComponent = defineComponent({
   },
 
   hitPlayer() {
-    console.log("Player hit");
+    this.emit("player-killed", this.props.player.nickname)
   },
 
   checkAbilityPickup(abilities) {
@@ -310,24 +310,21 @@ export const PlayerComponent = defineComponent({
   },
 
   render() {
-    const spritePosition = `-${
-      (this.props.isCurrentPlayer
-        ? this.state.frame
-        : this.props.player.frame) * TILE_SIZE
-    }px -${
-      SPRITE_DIRECTIONS[
-        this.props.isCurrentPlayer
-          ? this.state.direction
-          : this.props.player.direction
+    const spritePosition = `-${(this.props.isCurrentPlayer
+      ? this.state.frame
+      : this.props.player.frame) * TILE_SIZE
+      }px -${SPRITE_DIRECTIONS[
+      this.props.isCurrentPlayer
+        ? this.state.direction
+        : this.props.player.direction
       ] * TILE_SIZE
-    }px`;
+      }px`;
 
     return h(
       "div",
       {
-        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${
-          this.state.isDying ? "player-death" : ""
-        }`,
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.isDying ? "player-death" : ""
+          }`,
         style: {
           backgroundImage: `url("./assets/players/player-${this.state.character}.png")`,
           transform: `translate(
