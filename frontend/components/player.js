@@ -13,6 +13,7 @@ export const PlayerComponent = defineComponent({
       x: 0,
       y: 0,
       character: 1,
+      gotKilled: false,
       direction: "down",
       frame: 0,
       speed: 150,
@@ -261,7 +262,14 @@ export const PlayerComponent = defineComponent({
   },
 
   hitPlayer() {
+    if (this.state.gotKilled) return
+
+    this.updateState({ gotKilled: true })
     this.emit("player-killed", this.props.player.nickname)
+
+    setTimeout(() => {
+      this.updateState({ gotKilled: false })
+    }, 4000)
   },
 
   checkAbilityPickup(abilities) {
@@ -323,7 +331,7 @@ export const PlayerComponent = defineComponent({
     return h(
       "div",
       {
-        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.isDying ? "player-death" : ""
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.gotKilled ? "player-killed" : ""
           }`,
         style: {
           backgroundImage: `url("./assets/players/player-${this.state.character}.png")`,
