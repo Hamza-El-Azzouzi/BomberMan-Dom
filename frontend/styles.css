@@ -26,10 +26,8 @@ body {
 
 /* Game hud styles */
 .game-hud {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
+  width: 750px;
+  max-width: 750px;
   padding: 10px 20px;
   box-sizing: border-box;
   display: flex;
@@ -47,6 +45,21 @@ body {
   font-weight: bold;
   font-size: 22px;
   margin: auto;
+  animation: timer-float 2s ease-in-out infinite;
+}
+
+@keyframes timer-float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
 }
 
 .hud-players {
@@ -472,14 +485,14 @@ body {
   background: #44ff44;
 }
 
-.player {
+/* .player {
   position: absolute;
   background-image: url("./assets/altima2.png");
   will-change: transform, background-position;
   z-index: 1;
   width: 50px;
   height: 50px;
-}
+} */
 
 .player-sprite {
   width: 100%;
@@ -502,7 +515,7 @@ body {
   position: absolute;
   width: 50px;
   height: 50px;
-  background-image: url("./assets/altima2.png");
+  /* background-image: url("./assets/altima2.png"); */
   will-change: transform, background-position;
   z-index: 1;
   transition: transform 0.05s linear;
@@ -644,11 +657,6 @@ body {
 }
 
 .ability {
-  animation: float 2s ease-in-out infinite;
-}
-
-.animated-clock {
-  display: inline-block;
   animation: float 2s ease-in-out infinite;
 }
 

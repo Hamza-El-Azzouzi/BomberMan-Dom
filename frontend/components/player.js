@@ -12,6 +12,7 @@ export const PlayerComponent = defineComponent({
     return {
       x: 0,
       y: 0,
+      character: 1,
       direction: "down",
       frame: 0,
       speed: 150,
@@ -37,6 +38,7 @@ export const PlayerComponent = defineComponent({
     this.updateState({
       x: this.props.player.x,
       y: this.props.player.y,
+      character: this.props.player.character,
     });
 
     if (this.props.isCurrentPlayer) {
@@ -327,11 +329,10 @@ export const PlayerComponent = defineComponent({
           this.state.isDying ? "player-death" : ""
         }`,
         style: {
-          transform: `translate(${
-            this.props.isCurrentPlayer ? this.state.x : this.props.player.x
-          }px, ${
-            this.props.isCurrentPlayer ? this.state.y : this.props.player.y
-          }px)`,
+          backgroundImage: `url("./assets/players/player-${this.state.character}.png")`,
+          transform: `translate(
+                    ${this.props.isCurrentPlayer ? this.state.x : this.props.player.x}px, 
+                    ${this.props.isCurrentPlayer ? this.state.y : this.props.player.y}px)`,
           backgroundPosition: spritePosition,
         },
       },
