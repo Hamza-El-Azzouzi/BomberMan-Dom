@@ -1,6 +1,11 @@
 import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
-import { TILE_SIZE, SPRITE_DIRECTIONS } from "../constants/game-constants.js";
-import { checkCollision } from "../utils/collision.js";
+import {
+  TILE_SIZE,
+  SPRITE_DIRECTIONS,
+  BOMB_CONFIG,
+} from "../constants/game-constants.js";
+import { checkCollision, canPlaceBomb } from "../utils/collision.js";
+import { isPlayerIntheAbilityTile } from "../utils/abilities.js";
 
 export const PlayerComponent = defineComponent({
   state() {
@@ -16,10 +21,19 @@ export const PlayerComponent = defineComponent({
       lastAnimationTime: 0,
       moving: false,
       witness: false,
+      bombLimit: BOMB_CONFIG.defaultLimit,
+      bombsPlaced: 0,
+      bombRange: BOMB_CONFIG.defaultRange,
+      lastBombTime: 0,
+      bombCooldown: 500,
     };
   },
 
   onMounted() {
+    if (typeof this.props.ref === "function") {
+      this.props.ref(this);
+    }
+
     this.updateState({
       x: this.props.player.x,
       y: this.props.player.y,
@@ -31,15 +45,6 @@ export const PlayerComponent = defineComponent({
     }
   },
 
-  killPlayer() {
-    this.updateState({ isDying: true });
-    const resetAfterAnimation = () => {
-      this.resetPlayer();
-      this.$el.removeEventListener("animationend", resetAfterAnimation);
-    };
-    this.$el.addEventListener("animationend", resetAfterAnimation);
-  },
-
   resetPlayer() {
     this.updateState({
       isDying: false,
@@ -49,6 +54,7 @@ export const PlayerComponent = defineComponent({
       row: 1,
       direction: "down",
       frame: 0,
+      bombsPlaced: 0,
     });
   },
 
@@ -76,6 +82,40 @@ export const PlayerComponent = defineComponent({
     );
   },
 
+  placeBomb() {
+    if (this.state.bombsPlaced >= this.state.bombLimit) {
+      return;
+    }
+
+    const row = Math.round(this.state.y / TILE_SIZE);
+    const col = Math.round(this.state.x / TILE_SIZE);
+
+    if (!canPlaceBomb(row, col, this.props.tiles)) {
+      return;
+    }
+
+    const currentTime = performance.now();
+    if (currentTime - this.state.lastBombTime < this.state.bombCooldown) {
+      return;
+    }
+
+    this.updateState({
+      bombsPlaced: this.state.bombsPlaced + 1,
+      lastBombTime: currentTime,
+    });
+
+    this.emit("bomb-placed", {
+      row,
+      col,
+      range: this.state.bombRange,
+      nickname: this.props.player.nickname,
+    });
+  },
+
+  handleBombCompleted() {
+    this.updateState({ bombsPlaced: Math.max(0, this.state.bombsPlaced - 1) });
+  },
+
   update(deltaTime) {
     if (this.state.isDying) return;
 
@@ -84,6 +124,17 @@ export const PlayerComponent = defineComponent({
       let newState = { ...this.state };
       this.sendPlayerMoves(newState);
       return;
+    }
+
+    if (this.props.activeKeys.includes(" ")) {
+      this.placeBomb();
+      const index =
+        this.props.activeKeys.indexOf(" ") !== -1
+          ? this.props.activeKeys.indexOf(" ")
+          : this.props.activeKeys.indexOf("Spacebar");
+      if (index !== -1) {
+        this.props.activeKeys.splice(index, 1);
+      }
     }
 
     const lastKey = this.props.activeKeys[this.props.activeKeys.length - 1];
@@ -115,6 +166,8 @@ export const PlayerComponent = defineComponent({
             newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
           }
           newState.y -= this.state.speed * deltaTime;
+        } else if (this.props.tiles[row - 1][col] !== 6) {
+          newState.y = Math.ceil(newState.y / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -130,6 +183,8 @@ export const PlayerComponent = defineComponent({
             newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
           }
           newState.y += this.state.speed * deltaTime;
+        } else if (this.props.tiles[row + 1][col] !== 6) {
+          newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -145,6 +200,8 @@ export const PlayerComponent = defineComponent({
             newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
           }
           newState.x -= this.state.speed * deltaTime;
+        } else if (this.props.tiles[row][col - 1] !== 6) {
+          newState.x = Math.ceil(newState.x / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -160,6 +217,8 @@ export const PlayerComponent = defineComponent({
             newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
           }
           newState.x += this.state.speed * deltaTime;
+        } else if (this.props.tiles[row][col + 1] !== 6) {
+          newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -175,10 +234,77 @@ export const PlayerComponent = defineComponent({
         newState.lastAnimationTime = currentTime;
       }
       newState.witness = false;
+
+      let newAbilities = this.checkAbilityPickup(this.props.abilities);
+      if (newAbilities) {
+        newState.bombLimit = newAbilities.bombLimit;
+        newState.bombRange = newAbilities.bombRange;
+        newState.speed = newAbilities.speed;
+      }
+
       this.sendPlayerMoves(newState);
+    } else {
+      newState.frame = 0;
     }
 
     this.updateState(newState);
+    this.emit("update-player", {
+      newState: {
+        x: newState.x,
+        y: newState.y,
+        row: newState.row,
+        col: newState.col,
+      },
+    });
+  },
+
+  hitPlayer() {
+    console.log("Player hit");
+  },
+
+  checkAbilityPickup(abilities) {
+    if (Array.isArray(abilities)) {
+      for (const ability of abilities) {
+        if (isPlayerIntheAbilityTile(this.state.row, this.state.col, ability)) {
+          let newAbilities = this.upgrade(ability.type);
+
+          this.emit("ability-pickup", {
+            id: ability.id,
+            nickname: this.props.player.nickname,
+            type: ability.type,
+          });
+
+          return newAbilities;
+        }
+      }
+    }
+
+    return null;
+  },
+
+  upgrade(powerupType) {
+    let newPowerup = {
+      bombLimit: this.state.bombLimit,
+      bombRange: this.state.bombRange,
+      speed: this.state.speed,
+    };
+
+    switch (powerupType) {
+      case "bombs":
+        newPowerup.bombLimit += 1;
+        console.log(`Bomb limit increased to ${newPowerup.bombLimit}`);
+        break;
+      case "flames":
+        newPowerup.bombRange += 1;
+        console.log(`Bomb range increased to ${newPowerup.bombRange}`);
+        break;
+      case "speed":
+        newPowerup.speed += 50;
+        console.log(`Speed increased to ${newPowerup.speed}`);
+        break;
+    }
+
+    return newPowerup;
   },
 
   render() {

@@ -63,6 +63,23 @@ export class Room {
             case 'player_move':
                 this.broadcastPlayerMove(msg);
                 break;
+            case "ability":
+                this.broadcastAbility(msg);
+                break;
+            case 'bomb_placed':
+                this.broadcastBombExplosion(msg);
+                break;
+            case 'explosion':
+                this.broadcastBombExplosion(msg);
+                break;
+        }
+    }
+
+    broadcastBombExplosion(msg) {
+        for (const [ws, client] of this.clients) {
+            if (client.nickname !== msg.nickname) {
+                ws.send(JSON.stringify(msg));
+            }
         }
     }
 
@@ -82,6 +99,14 @@ export class Room {
     }
 
     broadcastPlayerMove(msg) {
+        for (const [ws, client] of this.clients) {
+            if (client.nickname !== msg.nickname) {
+                ws.send(JSON.stringify(msg));
+            }
+        }
+    }
+
+    broadcastAbility(msg) {
         for (const [ws, client] of this.clients) {
             if (client.nickname !== msg.nickname) {
                 ws.send(JSON.stringify(msg));
@@ -118,7 +143,7 @@ export class Room {
 
         const count = this.getRegisteredPlayersCount();
         if (count >= 2 && count < 4) {
-            this.startCountdown(0);
+            this.startCountdown(2);
         } else if (count === 4) {
             this.startCountdown(10);
         }

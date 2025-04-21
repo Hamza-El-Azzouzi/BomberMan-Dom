@@ -122,9 +122,11 @@ body {
   0% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
+
   100% {
     opacity: 1;
   }
@@ -162,6 +164,7 @@ body {
     transform: translateX(10px);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -223,13 +226,16 @@ body {
 }
 
 @keyframes dots {
+
   0%,
   20% {
     content: ".";
   }
+
   40% {
     content: "..";
   }
+
   60%,
   100% {
     content: "...";
@@ -331,6 +337,7 @@ body {
     transform: translateX(20px);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -455,8 +462,146 @@ body {
     opacity: 1;
     transform: scale(1);
   }
+
   100% {
     opacity: 0;
     transform: scale(0);
+  }
+}
+
+.bomb {
+  position: absolute;
+  height: 100%;
+  aspect-ratio: 1;
+  background: url("./assets/bomb_sprite.png") no-repeat center center;
+  background-size: cover;
+  animation: bomb-fuse 3s steps(3) infinite;
+}
+
+@keyframes bomb-fuse {
+  0% {
+    filter: brightness(1);
+  }
+
+  25% {
+    filter: brightness(2);
+  }
+
+  50% {
+    filter: brightness(3);
+  }
+
+  75% {
+    filter: brightness(2);
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
+.explosion {
+  position: absolute;
+  background: url("./assets/exp2.png") no-repeat;
+  will-change: background-position;
+  opacity: 1;
+}
+
+.explosion-center {
+  background-position: 0 0;
+}
+
+.explosion-up {
+  background-position: -50px 0;
+}
+
+.explosion-down {
+  background-position: -100px 0;
+}
+
+.explosion-left {
+  background-position: -150px 0;
+}
+
+.explosion-right {
+  background-position: -200px 0;
+}
+
+/* Powerup styles */
+.cell.powerup {
+  position: relative;
+  background-image: url("./assets/empty-space.png");
+}
+
+.cell.powerup::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.cell.powerup.bomb::after {
+  background-color: rgba(255, 0, 0, 0.7);
+  background-image: url("./assets/bomb-powerup.png");
+}
+
+.cell.powerup.flame::after {
+  background-color: rgba(255, 165, 0, 0.7);
+  background-image: url("./assets/flame-powerup.png");
+}
+
+.cell.powerup.speed::after {
+  background-color: rgba(0, 255, 0, 0.7);
+  background-image: url("./assets/speed-powerup.png");
+}
+
+/* Player death animation */
+.player-death {
+  animation: death 1s forwards;
+}
+
+@keyframes death {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: rotate(180deg) scale(0.5);
+  }
+
+  100% {
+    opacity: 0;
+    transform: rotate(360deg) scale(0);
+  }
+}
+
+.ability-container {
+  border: red solid 1px;
+}
+
+.ability {
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+
+  100% {
+    transform: translateY(0);
   }
 }

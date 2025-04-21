@@ -53,7 +53,7 @@ export function placeBomb() {
     showExplosionEffect(bombX, bombY);
     activeBomb = null;
     Tils[bombY][bombX] = 0;
-  }, 1500);
+  }, 5000);
 }
 function getElementFromGrid(row, col) {
   let rowElements = document.querySelectorAll(".row");
