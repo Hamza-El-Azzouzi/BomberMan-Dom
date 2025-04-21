@@ -24,6 +24,60 @@ body {
   box-sizing: border-box;
 }
 
+/* Game hud styles */
+.game-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 10px 20px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  color: white;
+  font-family: 'Arial', sans-serif;
+  font-size: 18px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.hud-timer {
+  font-weight: bold;
+  font-size: 22px;
+  margin: auto;
+}
+
+.hud-players {
+  display: flex;
+  gap: 20px;
+}
+
+.hud-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(30, 30, 30, 0.6);
+  padding: 5px 10px;
+  border-radius: 10px;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+}
+
+.hud-player.me {
+  border: 2px solid gold;
+}
+
+.player-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.player-lives {
+  color: red;
+}
+
+
 /* Nickname Entry */
 .nickname-container {
   display: flex;
@@ -206,6 +260,7 @@ body {
 .game-container {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: 3rem;
@@ -589,6 +644,11 @@ body {
 }
 
 .ability {
+  animation: float 2s ease-in-out infinite;
+}
+
+.animated-clock {
+  display: inline-block;
   animation: float 2s ease-in-out infinite;
 }
 

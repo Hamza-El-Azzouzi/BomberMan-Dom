@@ -10,6 +10,7 @@ import { TILE_SIZE, TILE_TYPES } from "../constants/game-constants.js";
 import { calculateExplosion, isPlayerInExplosion, isTileBreakable } from "../utils/collision.js";
 import { getRandomAbility } from "../utils/abilities.js"
 import { AbilityComponent } from "./ability.js";
+import { HudComponent } from "./hud.js";
 
 export const GameComponent = defineComponent({
   state() {
@@ -170,7 +171,7 @@ export const GameComponent = defineComponent({
     const newTiles = [...this.state.tiles];
     newTiles[row][col] = TILE_TYPES.EMPTY;
     const explosions = calculateExplosion(row, col, range, this.state.tiles);
-    
+
     explosions.forEach(explosion => {
       const newExplosions = [...this.state.explosions];
       newExplosions.push({
@@ -328,6 +329,10 @@ export const GameComponent = defineComponent({
         },
       },
       [
+        h(HudComponent, {
+          players: this.state.players,
+          currentPlayer: this.state.currentPlayer,
+        }),
         h(
           MapComponent,
           {
