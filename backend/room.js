@@ -64,6 +64,9 @@ export class Room {
             case 'player_move':
                 this.broadcastPlayerMove(msg);
                 break;
+            case "player_killed":
+                this.broadcastPlayerKilled(msg);
+                break;
             case "ability":
                 this.broadcastAbility(msg);
                 break;
@@ -100,6 +103,14 @@ export class Room {
     }
 
     broadcastPlayerMove(msg) {
+        for (const [ws, client] of this.clients) {
+            if (client.nickname !== msg.nickname) {
+                ws.send(JSON.stringify(msg));
+            }
+        }
+    }
+
+    broadcastPlayerKilled(msg) {
         for (const [ws, client] of this.clients) {
             if (client.nickname !== msg.nickname) {
                 ws.send(JSON.stringify(msg));

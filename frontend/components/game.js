@@ -84,10 +84,29 @@ export const GameComponent = defineComponent({
           case "ability":
             this.handleCommingAbilities(data)
             break;
+          case "player_killed":
+            this.handlePlayerKilled(data)
+            break;
           default:
             console.log("Unhandled message:", data);
         }
       };
+    }
+  },
+
+  handlePlayerKilled(data) {
+    if (data.livesLeft === 0) {
+      const newPlayers = this.state.players.filter(player => player.nickname != data.nickname)
+
+      this.updateState({
+        players: newPlayers,
+      })
+    } else {
+      const playerComponent = this.getPlayerComponent(data.nickname);
+      if (playerComponent) {
+        console.log(playerComponent);
+        
+      }
     }
   },
 
@@ -309,13 +328,32 @@ export const GameComponent = defineComponent({
   },
 
   handlePlayerGetKilled(nickname) {
+    let states = {
+      type: "player_killed",
+      nickname: nickname,
+      livesLeft: 0
+    }
+
     if (this.state.lives > 1) {
+      states.livesLeft = this.state.lives - 1
+      this.props.ws.send(
+        JSON.stringify(states)
+      );
+
       this.updateState({
         lives: this.state.lives - 1
       })
     } else {
-      const newPlayers = this.state.players.filter(player => player.nickname != nickname)
+      this.props.ws.send(
+        JSON.stringify(states)
+      );
 
+      const playerComponent = this.getPlayerComponent(nickname);
+      if (playerComponent) {
+        playerComponent.unmount();
+      }
+
+      const newPlayers = this.state.players.filter(player => player.nickname != nickname)
       this.updateState({
         players: newPlayers,
         lives: 0
