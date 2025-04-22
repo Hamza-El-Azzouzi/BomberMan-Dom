@@ -24,6 +24,78 @@ body {
   box-sizing: border-box;
 }
 
+/* Game hud styles */
+.game-hud {
+  width: 750px;
+  max-width: 750px;
+  padding: 10px 20px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  color: white;
+  font-family: 'Arial', sans-serif;
+  font-size: 18px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.hud-timer {
+  font-weight: bold;
+  font-size: 22px;
+  animation: timer-float 2s ease-in-out infinite;
+}
+
+@keyframes timer-float {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.hud-players {
+  display: flex;
+  gap: 20px;
+}
+
+.hud-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 10px;
+}
+
+.hud-player.me {
+  display: flex;
+  gap: 15px;
+  flex-direction: row;
+}
+
+.game-hud .player-character {
+  width: 50px;
+  height: 50px;
+
+}
+
+.player-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.player-lives {
+  color: red;
+}
+
+
 /* Nickname Entry */
 .nickname-container {
   display: flex;
@@ -206,6 +278,7 @@ body {
 .game-container {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: 3rem;
@@ -412,13 +485,23 @@ body {
   background: #44ff44;
 }
 
-.player {
-  position: absolute;
-  background-image: url("./assets/altima2.png");
-  will-change: transform, background-position;
-  z-index: 1;
-  width: 50px;
-  height: 50px;
+.player-killed {
+  animation: wave 0.5s infinite;
+  opacity: 0.7;
+}
+
+@keyframes wave {
+  0% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.5;
+  }
 }
 
 .player-sprite {
@@ -436,6 +519,15 @@ body {
   top: -20px;
   width: 10px;
   text-align: center;
+}
+
+.player {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  will-change: transform, background-position;
+  z-index: 1;
+  transition: transform 0.05s linear;
 }
 
 .player-death {
@@ -588,6 +680,113 @@ body {
 
   100% {
     transform: translateY(0);
+  }
+}
+
+/* Game Over Component Styles */
+.game-over-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.game-over-container {
+  background-color: var(--secondary);
+  border: 4px solid var(--accent);
+  border-radius: 10px;
+  padding: 30px;
+  min-width: 60%;
+  max-width: 90%;
+  max-height: 70%;
+  text-align: center;
+  box-shadow: 0 0 20px  var(--accent);
+  animation: scaleIn 0.3s ease-in-out;
+}
+
+.game-over-title {
+  color: #ff4444;
+  font-size: 2em;
+  margin-bottom: 20px;
+  text-shadow: 3px 3px 0 #000;
+}
+
+.game-over-content {
+  margin-bottom: 25px;
+}
+
+.game-over-winner {
+  font-size: 1.5em;
+  color: #fff;
+  margin-bottom: 15px;
+}
+
+.winner-name {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.winner-message {
+  color: #4caf50;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.loser-message {
+  color: #ff7e7e;
+  font-size: 0.8em;
+}
+
+.play-again-button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 15px 30px;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+  font-family: 'Press Start 2P', cursive, sans-serif;
+  text-transform: uppercase;
+}
+
+.play-again-button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.play-again-button:active {
+  transform: scale(0.95);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 

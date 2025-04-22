@@ -8,6 +8,9 @@ export const PlayerComponent = defineComponent({
     return {
       x: 0,
       y: 0,
+      character: 1,
+      gotKilled: false,
+      isWaving: false,
       direction: "down",
       frame: 0,
       speed: 150,
@@ -33,6 +36,7 @@ export const PlayerComponent = defineComponent({
     this.updateState({
       x: this.props.player.x,
       y: this.props.player.y,
+      character: this.props.player.character,
     });
 
     if (this.props.isCurrentPlayer) {
@@ -299,7 +303,14 @@ export const PlayerComponent = defineComponent({
   },
 
   hitPlayer() {
-    console.log("Player hit");
+    if (this.state.gotKilled) return
+
+    this.updateState({ gotKilled: true })
+    this.emit("player-killed", this.props.player.nickname)
+
+    setTimeout(() => {
+      this.updateState({ gotKilled: false })
+    }, 4000)
   },
 
   checkAbilityPickup(abilities) {
@@ -363,10 +374,10 @@ export const PlayerComponent = defineComponent({
     return h(
       "div",
       {
-        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${
-          this.state.isDying ? "player-death" : ""
-        }`,
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.gotKilled || this.state.isWaving ? "player-killed" : ""
+          }`,
         style: {
+          backgroundImage: `url("./assets/players/player-${this.state.character}.png")`,
           transform: `translate(${this.state.x}px, ${this.state.y}px)`,
           backgroundPosition: spritePosition,
           width: `${this.props.TILE_SIZE}px`,
