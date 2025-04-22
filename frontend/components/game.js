@@ -11,11 +11,14 @@ import { calculateExplosion, isPlayerInExplosion, isTileBreakable } from "../uti
 import { getRandomAbility } from "../utils/abilities.js"
 import { AbilityComponent } from "./ability.js";
 import { HudComponent } from "./hud.js";
+import { GameOverComponent } from "./gameOver.js";
 
 export const GameComponent = defineComponent({
   state() {
     return {
       players: [],
+      gameOver: false,
+      winner: null,
       currentPlayer: null,
       currentPlayerData: {},
       tiles: [],
@@ -24,7 +27,7 @@ export const GameComponent = defineComponent({
       bombs: [],
       explosions: [],
       abilities: [],
-      lives: 2,
+      lives: 3,
     };
   },
 
@@ -85,7 +88,7 @@ export const GameComponent = defineComponent({
             this.handleCommingAbilities(data)
             break;
           case "player_killed":
-            this.handlePlayerKilled(data)
+            this.handleRemotePlayerKilled(data)
             break;
           default:
             console.log("Unhandled message:", data);
@@ -94,7 +97,7 @@ export const GameComponent = defineComponent({
     }
   },
 
-  handlePlayerKilled(data) {
+  handleRemotePlayerKilled(data) {
     if (data.livesLeft === 0) {
       const newPlayers = this.state.players.filter(player => player.nickname != data.nickname)
 
@@ -386,6 +389,13 @@ export const GameComponent = defineComponent({
   },
 
   render() {
+    if (!this.state.gameOver && this.state.players?.length === 1) {
+      this.updateState({
+        gameOver: true,
+        winner: this.state.players[0].nickname,
+      })
+    }
+
     return h(
       "div",
       {
@@ -400,6 +410,14 @@ export const GameComponent = defineComponent({
         h(HudComponent, {
           currentPlayer: this.state.currentPlayerData,
           lives: this.state.lives,
+          gameOver: this.state.gameOver,
+        }),
+        h(GameOverComponent, {
+          visible: this.state.gameOver,
+          winner: this.state.winner,
+          currentPlayer: this.state.currentPlayer,
+          isCurrentPlayerWinner: this.state.winner === this.state.currentPlayer,
+          // onPlayAgain: () => this.handlePlayAgain()
         }),
         h(
           MapComponent,

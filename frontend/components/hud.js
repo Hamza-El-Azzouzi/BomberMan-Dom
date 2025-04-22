@@ -10,8 +10,12 @@ export const HudComponent = defineComponent({
     },
 
     onMounted() {
-
         this.interval = setInterval(() => {
+            if (this.props.gameOver) {
+                clearInterval(this.interval);
+                return;
+            }
+
             const now = Date.now();
             const diff = Math.floor((now - this.state.startTime) / 1000);
             const minutes = String(Math.floor(diff / 60)).padStart(2, '0');
@@ -28,7 +32,7 @@ export const HudComponent = defineComponent({
         return h("div", { class: "game-hud" }, [
 
             h("div", {
-                class: `hud-player ${"me"}`
+                class: `hud-player me`
             }, [
                 h("div", {
                     class: "player-character",
@@ -41,8 +45,7 @@ export const HudComponent = defineComponent({
                 )
             ]),
 
-            h("div", { class: "hud-timer" }, [`⏱️ ${this.state.elapsedTime}`
-            ]),
+            h("div", { class: "hud-timer" }, [`⏱️ ${this.state.elapsedTime}`]),
         ]);
     }
 });

@@ -696,3 +696,110 @@ body {
     transform: translateY(0);
   }
 }
+
+/* Game Over Component Styles */
+.game-over-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.game-over-container {
+  background-color: var(--secondary);
+  border: 4px solid var(--accent);
+  border-radius: 10px;
+  padding: 30px;
+  min-width: 60%;
+  max-width: 90%;
+  max-height: 70%;
+  text-align: center;
+  box-shadow: 0 0 20px  var(--accent);
+  animation: scaleIn 0.3s ease-in-out;
+}
+
+.game-over-title {
+  color: #ff4444;
+  font-size: 2em;
+  margin-bottom: 20px;
+  text-shadow: 3px 3px 0 #000;
+}
+
+.game-over-content {
+  margin-bottom: 25px;
+}
+
+.game-over-winner {
+  font-size: 1.5em;
+  color: #fff;
+  margin-bottom: 15px;
+}
+
+.winner-name {
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.winner-message {
+  color: #4caf50;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.loser-message {
+  color: #ff7e7e;
+  font-size: 0.8em;
+}
+
+.play-again-button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 15px 30px;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+  font-family: 'Press Start 2P', cursive, sans-serif;
+  text-transform: uppercase;
+}
+
+.play-again-button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.play-again-button:active {
+  transform: scale(0.95);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
