@@ -1,5 +1,5 @@
 import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
-import { TILE_SIZE, BOMB_CONFIG } from "../constants/game-constants.js";
+import { BOMB_CONFIG } from "../constants/game-constants.js";
 
 export const BombComponent = defineComponent({
     state() {
@@ -27,9 +27,9 @@ export const BombComponent = defineComponent({
         return h("div", {
             class: "bomb",
             style: {
-                width: `${TILE_SIZE}px`,
-                height: `${TILE_SIZE}px`,
-                transform: `translate(${this.props.col * TILE_SIZE}px, ${this.props.row * TILE_SIZE}px)`,
+                width: `${this.props.TILE_SIZE}px`,
+                height: `${this.props.TILE_SIZE}px`,
+                transform: `translate(${this.props.col * this.props.TILE_SIZE}px, ${this.props.row * this.props.TILE_SIZE}px)`,
             }
         });
     },

@@ -2,6 +2,21 @@ import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
 import { TILE_TYPES } from "../constants/game-constants.js";
 
 export const MapComponent = defineComponent({
+  onMounted() {
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width;
+        let blockSize = width / this.props.tiles[0].length;
+        if (blockSize > 50) {
+          blockSize = 50;
+        }
+        this.emit("container-resize", blockSize);
+      }
+    });
+
+    resizeObserver.observe(this.firstElement);
+  },
+
   render() {
     return h("div", { class: "game-map" }, [
       ...this.props.tiles.map((row, y) =>
@@ -37,7 +52,7 @@ export const MapComponent = defineComponent({
             });
           })
         )
-      )
+      ),
     ]);
   },
 });

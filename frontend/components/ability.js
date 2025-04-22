@@ -1,13 +1,12 @@
 import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
-import { TILE_SIZE } from "../constants/game-constants.js";
 
 export const AbilityComponent = defineComponent({
 
     render() {
-        const size = TILE_SIZE * 0.65;
-        const offset = (TILE_SIZE - size) / 2;
-        const x = this.props.col * TILE_SIZE + offset;
-        const y = this.props.row * TILE_SIZE;
+        const size = this.props.TILE_SIZE * 0.65;
+        const offset = (this.props.TILE_SIZE - size) / 2;
+        const x = this.props.col * this.props.TILE_SIZE + offset;
+        const y = this.props.row * this.props.TILE_SIZE;
 
         return h("div", {
             style: {

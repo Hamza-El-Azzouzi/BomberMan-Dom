@@ -1,5 +1,5 @@
 import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
-import { TILE_SIZE, BOMB_CONFIG } from "../constants/game-constants.js";
+import { BOMB_CONFIG } from "../constants/game-constants.js";
 
 export const ExplosionComponent = defineComponent({
     state() {
@@ -42,7 +42,7 @@ export const ExplosionComponent = defineComponent({
         const row = Math.floor(this.state.frame / 4);
         const col = this.state.frame % 4;
 
-        const backgroundPosition = `-${col * TILE_SIZE}px -${row * TILE_SIZE}px`;
+        const backgroundPosition = `-${col * this.props.TILE_SIZE}px -${row * this.props.TILE_SIZE}px`;
 
         let className = "explosion";
         if (this.props.direction) {
@@ -54,9 +54,9 @@ export const ExplosionComponent = defineComponent({
         return h("div", {
             class: className,
             style: {
-                transform: `translate(${this.props.col * TILE_SIZE}px, ${this.props.row * TILE_SIZE}px)`,
-                width: `${TILE_SIZE}px`,
-                height: `${TILE_SIZE}px`,
+                transform: `translate(${this.props.col * this.props.TILE_SIZE}px, ${this.props.row * this.props.TILE_SIZE}px)`,
+                width: `${this.props.TILE_SIZE}px`,
+                height: `${this.props.TILE_SIZE}px`,
                 backgroundPosition: backgroundPosition
             }
         });
