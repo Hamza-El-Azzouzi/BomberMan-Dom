@@ -5,6 +5,7 @@ export class Room {
         this.status = 'waiting';
         this.messages = [];
         this.gameMap = gameMap;
+        this.characters = [1, 2, 3, 4]
         this.countdown = null;
     }
 
@@ -63,6 +64,9 @@ export class Room {
             case 'player_move':
                 this.broadcastPlayerMove(msg);
                 break;
+            case "player_killed":
+                this.broadcastPlayerKilled(msg);
+                break;
             case "ability":
                 this.broadcastAbility(msg);
                 break;
@@ -99,6 +103,14 @@ export class Room {
     }
 
     broadcastPlayerMove(msg) {
+        for (const [ws, client] of this.clients) {
+            if (client.nickname !== msg.nickname) {
+                ws.send(JSON.stringify(msg));
+            }
+        }
+    }
+
+    broadcastPlayerKilled(msg) {
         for (const [ws, client] of this.clients) {
             if (client.nickname !== msg.nickname) {
                 ws.send(JSON.stringify(msg));
@@ -170,6 +182,14 @@ export class Room {
         }, 1000);
     }
 
+    getRandomCaracter() {
+        const randomIdx = Math.floor((Math.random() * this.characters.length))
+        const randomElem = this.characters[randomIdx]
+        this.characters.splice(randomIdx, 1);
+
+        return randomElem
+    }
+
     startGame() {
         this.status = 'ingame';
         const positions = [[1, 1], [13, 11], [13, 1], [1, 11]];
@@ -179,6 +199,7 @@ export class Room {
         for (const client of this.clients.values()) {
             if (client.registered) {
                 playerInfos.push({
+                    character: this.getRandomCaracter(),
                     nickname: client.nickname,
                     x: positions[i][0] * 50,
                     y: positions[i][1] * 50
