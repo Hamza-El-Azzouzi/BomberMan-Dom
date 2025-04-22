@@ -25,12 +25,12 @@ body {
   aspect-ratio: 15/1;
 }
 
-/* .player {
+.player {
   position: absolute;
   background-image: url('./altima2.png');
   will-change: transform, background-position;
   z-index: 1;
-} */
+}
 
 .enemy {
   position: absolute;

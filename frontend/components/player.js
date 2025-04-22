@@ -12,9 +12,6 @@ export const PlayerComponent = defineComponent({
     return {
       x: 0,
       y: 0,
-      character: 1,
-      gotKilled: false,
-      isWaving: false,
       direction: "down",
       frame: 0,
       speed: 150,
@@ -40,7 +37,6 @@ export const PlayerComponent = defineComponent({
     this.updateState({
       x: this.props.player.x,
       y: this.props.player.y,
-      character: this.props.player.character,
     });
 
     if (this.props.isCurrentPlayer) {
@@ -263,14 +259,7 @@ export const PlayerComponent = defineComponent({
   },
 
   hitPlayer() {
-    if (this.state.gotKilled) return
-
-    this.updateState({ gotKilled: true })
-    this.emit("player-killed", this.props.player.nickname)
-
-    setTimeout(() => {
-      this.updateState({ gotKilled: false })
-    }, 4000)
+    console.log("Player hit");
   },
 
   checkAbilityPickup(abilities) {
@@ -319,26 +308,30 @@ export const PlayerComponent = defineComponent({
   },
 
   render() {
-    const spritePosition = `-${(this.props.isCurrentPlayer
-      ? this.state.frame
-      : this.props.player.frame) * TILE_SIZE
-      }px -${SPRITE_DIRECTIONS[
-      this.props.isCurrentPlayer
-        ? this.state.direction
-        : this.props.player.direction
+    const spritePosition = `-${
+      (this.props.isCurrentPlayer
+        ? this.state.frame
+        : this.props.player.frame) * TILE_SIZE
+    }px -${
+      SPRITE_DIRECTIONS[
+        this.props.isCurrentPlayer
+          ? this.state.direction
+          : this.props.player.direction
       ] * TILE_SIZE
-      }px`;
+    }px`;
 
     return h(
       "div",
       {
-        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.gotKilled || this.state.isWaving ? "player-killed" : ""
-          }`,
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${
+          this.state.isDying ? "player-death" : ""
+        }`,
         style: {
-          backgroundImage: `url("./assets/players/player-${this.state.character}.png")`,
-          transform: `translate(
-                    ${this.props.isCurrentPlayer ? this.state.x : this.props.player.x}px, 
-                    ${this.props.isCurrentPlayer ? this.state.y : this.props.player.y}px)`,
+          transform: `translate(${
+            this.props.isCurrentPlayer ? this.state.x : this.props.player.x
+          }px, ${
+            this.props.isCurrentPlayer ? this.state.y : this.props.player.y
+          }px)`,
           backgroundPosition: spritePosition,
         },
       },
