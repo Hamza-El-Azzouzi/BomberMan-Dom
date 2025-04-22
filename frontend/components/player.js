@@ -14,6 +14,7 @@ export const PlayerComponent = defineComponent({
       y: 0,
       character: 1,
       gotKilled: false,
+      isWaving: false,
       direction: "down",
       frame: 0,
       speed: 150,
@@ -331,7 +332,7 @@ export const PlayerComponent = defineComponent({
     return h(
       "div",
       {
-        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.gotKilled ? "player-killed" : ""
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.gotKilled || this.state.isWaving ? "player-killed" : ""
           }`,
         style: {
           backgroundImage: `url("./assets/players/player-${this.state.character}.png")`,

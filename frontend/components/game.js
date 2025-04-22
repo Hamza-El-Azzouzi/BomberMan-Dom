@@ -104,9 +104,17 @@ export const GameComponent = defineComponent({
     } else {
       const playerComponent = this.getPlayerComponent(data.nickname);
       if (playerComponent) {
-        console.log(playerComponent);
-        
+        playerComponent.state.isWaving = true
+
+        playerComponent.updateState({
+          isWaving: true
+        })
+
+        setTimeout(() => {
+          playerComponent.updateState({ isWaving: false })
+        }, 4000)
       }
+
     }
   },
 
@@ -348,10 +356,6 @@ export const GameComponent = defineComponent({
         JSON.stringify(states)
       );
 
-      const playerComponent = this.getPlayerComponent(nickname);
-      if (playerComponent) {
-        playerComponent.unmount();
-      }
 
       const newPlayers = this.state.players.filter(player => player.nickname != nickname)
       this.updateState({
