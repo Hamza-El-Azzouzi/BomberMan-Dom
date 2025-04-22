@@ -799,6 +799,9 @@ body {
     width: 90vw;
     height: calc(90vw * 0.867);
   }
+  .game-hud{
+    width: 90vw;
+  }
 }
 
 @media (max-width: 480px) {
