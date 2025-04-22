@@ -5,6 +5,7 @@
   --text: #ffffff;
   --text-secondary: #cccccc;
   --border: #404040;
+  --float-height: -1vh;
 }
 
 body {
@@ -582,7 +583,7 @@ body {
   }
 
   50% {
-    transform: translateY(-5px);
+    transform: translateY(var(--float-height));
   }
 
   100% {
@@ -591,9 +592,19 @@ body {
 }
 
 @media (max-width: 800px) {
+  :root {
+    --float-height: -0.5vh;
+  }
+
   .game-map {
     width: 90vw;
     height: calc(90vw * 0.867);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --float-height: -0.25vh;
   }
 }
 

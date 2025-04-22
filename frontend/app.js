@@ -18,7 +18,7 @@ const App = defineComponent({
   },
   handleNickname(nickname) {
     if (!nickname.trim()) return;
-    const ws = new WebSocket("ws://localhost:8080/ws");
+    const ws = new WebSocket("ws://10.1.6.3:8080/ws");
 
     ws.onopen = () => {
       ws.send(

@@ -141,7 +141,6 @@ export const GameComponent = defineComponent({
     this.state.players.forEach((player) => {
       const playerComponent = this.getPlayerComponent(player.nickname);
       if (playerComponent && player.nickname === data.nickname) {
-        console.log(playerComponent);
         
         playerComponent.updateState({
           x: absoluteX,
