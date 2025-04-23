@@ -1,9 +1,5 @@
 import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
-import {
-  TILE_SIZE,
-  SPRITE_DIRECTIONS,
-  BOMB_CONFIG,
-} from "../constants/game-constants.js";
+import { SPRITE_DIRECTIONS, BOMB_CONFIG } from "../constants/game-constants.js";
 import { checkCollision, canPlaceBomb } from "../utils/collision.js";
 import { isPlayerIntheAbilityTile } from "../utils/abilities.js";
 
@@ -18,7 +14,6 @@ export const PlayerComponent = defineComponent({
       direction: "down",
       frame: 0,
       speed: 150,
-      isDying: false,
       row: 1,
       col: 1,
       lastAnimationTime: 0,
@@ -29,6 +24,7 @@ export const PlayerComponent = defineComponent({
       bombRange: BOMB_CONFIG.defaultRange,
       lastBombTime: 0,
       bombCooldown: 500,
+      gameOver: false,
     };
   },
 
@@ -51,19 +47,17 @@ export const PlayerComponent = defineComponent({
 
   resetPlayer() {
     this.updateState({
-      isDying: false,
-      x: TILE_SIZE,
-      y: TILE_SIZE,
-      col: 1,
-      row: 1,
+      x: this.props.player.col * this.props.TILE_SIZE,
+      y: this.props.player.row * this.props.TILE_SIZE,
+      character: this.props.player.character,
       direction: "down",
       frame: 0,
-      bombsPlaced: 0,
     });
+    this.sendPlayerMoves(this.state);
   },
 
   animate(timestamp) {
-    if (!this.state.isDying) {
+    if (!this.state.gameOver) {
       const deltaTime = (timestamp - (this.lastTimestamp || timestamp)) / 1000;
       this.lastTimestamp = timestamp;
       this.update(deltaTime);
@@ -72,13 +66,16 @@ export const PlayerComponent = defineComponent({
   },
 
   sendPlayerMoves(newState) {
+    const relativeX = newState.x / this.props.TILE_SIZE;
+    const relativeY = newState.y / this.props.TILE_SIZE;
+
     this.props.ws.send(
       JSON.stringify({
         nickname: this.props.player.nickname,
         type: "player_move",
         position: {
-          x: newState.x,
-          y: newState.y,
+          x: relativeX,
+          y: relativeY,
           frame: newState.frame,
           direction: newState.direction,
 
@@ -88,13 +85,32 @@ export const PlayerComponent = defineComponent({
     );
   },
 
+  handlePlayerMove(data) {
+    const absoluteX = data.position.x * this.props.TILE_SIZE;
+    const absoluteY = data.position.y * this.props.TILE_SIZE;
+
+    this.updateState({
+      players: this.state.players.map((p) =>
+        p.nickname === data.nickname
+          ? {
+              ...p,
+              x: absoluteX,
+              y: absoluteY,
+              direction: data.position.direction,
+              frame: data.position.frame,
+            }
+          : p
+      ),
+    });
+  },
+
   placeBomb() {
     if (this.state.bombsPlaced >= this.state.bombLimit) {
       return;
     }
 
-    const row = Math.round(this.state.y / TILE_SIZE);
-    const col = Math.round(this.state.x / TILE_SIZE);
+    const row = Math.round(this.state.y / this.props.TILE_SIZE);
+    const col = Math.round(this.state.x / this.props.TILE_SIZE);
 
     if (!canPlaceBomb(row, col, this.props.tiles)) {
       return;
@@ -123,8 +139,6 @@ export const PlayerComponent = defineComponent({
   },
 
   update(deltaTime) {
-    if (this.state.isDying) return;
-
     if (this.props.activeKeys.length === 0 && !this.state.witness) {
       this.updateState({ frame: 0, witness: true });
       let newState = { ...this.state };
@@ -144,17 +158,17 @@ export const PlayerComponent = defineComponent({
     }
 
     const lastKey = this.props.activeKeys[this.props.activeKeys.length - 1];
-    const threshold = TILE_SIZE / 2;
+    const threshold = this.props.TILE_SIZE / 2;
 
     let row =
-      this.state.y % TILE_SIZE > threshold
-        ? Math.ceil(this.state.y / TILE_SIZE)
-        : Math.floor(this.state.y / TILE_SIZE);
+      this.state.y % this.props.TILE_SIZE > threshold
+        ? Math.ceil(this.state.y / this.props.TILE_SIZE)
+        : Math.floor(this.state.y / this.props.TILE_SIZE);
 
     let col =
-      this.state.x % TILE_SIZE > threshold
-        ? Math.ceil(this.state.x / TILE_SIZE)
-        : Math.floor(this.state.x / TILE_SIZE);
+      this.state.x % this.props.TILE_SIZE > threshold
+        ? Math.ceil(this.state.x / this.props.TILE_SIZE)
+        : Math.floor(this.state.x / this.props.TILE_SIZE);
 
     let surroundings;
     let newState = { ...this.state };
@@ -162,69 +176,91 @@ export const PlayerComponent = defineComponent({
     switch (lastKey) {
       case "ArrowUp":
       case "w":
-        row = Math.ceil(newState.y / TILE_SIZE);
+        row = Math.ceil(newState.y / this.props.TILE_SIZE);
         newState.direction = "up";
         surroundings = checkCollision(row, col, this.props.tiles);
         if (surroundings.up) {
-          if (newState.x % TILE_SIZE > threshold) {
-            newState.x = Math.ceil(newState.x / TILE_SIZE) * TILE_SIZE;
+          if (newState.x % this.props.TILE_SIZE > threshold) {
+            newState.x =
+              Math.ceil(newState.x / this.props.TILE_SIZE) *
+              this.props.TILE_SIZE;
           } else {
-            newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
+            newState.x =
+              Math.floor(newState.x / this.props.TILE_SIZE) *
+              this.props.TILE_SIZE;
           }
           newState.y -= this.state.speed * deltaTime;
         } else if (this.props.tiles[row - 1][col] !== 6) {
-          newState.y = Math.ceil(newState.y / TILE_SIZE) * TILE_SIZE;
+          newState.y =
+            Math.ceil(newState.y / this.props.TILE_SIZE) * this.props.TILE_SIZE;
         }
         this.state.moving = true;
         break;
       case "ArrowDown":
       case "s":
         newState.direction = "down";
-        row = Math.floor(newState.y / TILE_SIZE);
+        row = Math.floor(newState.y / this.props.TILE_SIZE);
         surroundings = checkCollision(row, col, this.props.tiles);
         if (surroundings.down) {
-          if (newState.x % TILE_SIZE > threshold) {
-            newState.x = Math.ceil(newState.x / TILE_SIZE) * TILE_SIZE;
+          if (newState.x % this.props.TILE_SIZE > threshold) {
+            newState.x =
+              Math.ceil(newState.x / this.props.TILE_SIZE) *
+              this.props.TILE_SIZE;
           } else {
-            newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
+            newState.x =
+              Math.floor(newState.x / this.props.TILE_SIZE) *
+              this.props.TILE_SIZE;
           }
           newState.y += this.state.speed * deltaTime;
         } else if (this.props.tiles[row + 1][col] !== 6) {
-          newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
+          newState.y =
+            Math.floor(newState.y / this.props.TILE_SIZE) *
+            this.props.TILE_SIZE;
         }
         this.state.moving = true;
         break;
       case "ArrowLeft":
       case "a":
         newState.direction = "left";
-        col = Math.ceil(newState.x / TILE_SIZE);
+        col = Math.ceil(newState.x / this.props.TILE_SIZE);
         surroundings = checkCollision(row, col, this.props.tiles);
         if (surroundings.left) {
-          if (newState.y % TILE_SIZE > threshold) {
-            newState.y = Math.ceil(newState.y / TILE_SIZE) * TILE_SIZE;
+          if (newState.y % this.props.TILE_SIZE > threshold) {
+            newState.y =
+              Math.ceil(newState.y / this.props.TILE_SIZE) *
+              this.props.TILE_SIZE;
           } else {
-            newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
+            newState.y =
+              Math.floor(newState.y / this.props.TILE_SIZE) *
+              this.props.TILE_SIZE;
           }
           newState.x -= this.state.speed * deltaTime;
         } else if (this.props.tiles[row][col - 1] !== 6) {
-          newState.x = Math.ceil(newState.x / TILE_SIZE) * TILE_SIZE;
+          newState.x =
+            Math.ceil(newState.x / this.props.TILE_SIZE) * this.props.TILE_SIZE;
         }
         this.state.moving = true;
         break;
       case "ArrowRight":
       case "d":
         newState.direction = "right";
-        col = Math.floor(newState.x / TILE_SIZE);
+        col = Math.floor(newState.x / this.props.TILE_SIZE);
         surroundings = checkCollision(row, col, this.props.tiles);
         if (surroundings.right) {
-          if (newState.y % TILE_SIZE > threshold) {
-            newState.y = Math.ceil(newState.y / TILE_SIZE) * TILE_SIZE;
+          if (newState.y % this.props.TILE_SIZE > threshold) {
+            newState.y =
+              Math.ceil(newState.y / this.props.TILE_SIZE) *
+              this.props.TILE_SIZE;
           } else {
-            newState.y = Math.floor(newState.y / TILE_SIZE) * TILE_SIZE;
+            newState.y =
+              Math.floor(newState.y / this.props.TILE_SIZE) *
+              this.props.TILE_SIZE;
           }
           newState.x += this.state.speed * deltaTime;
         } else if (this.props.tiles[row][col + 1] !== 6) {
-          newState.x = Math.floor(newState.x / TILE_SIZE) * TILE_SIZE;
+          newState.x =
+            Math.floor(newState.x / this.props.TILE_SIZE) *
+            this.props.TILE_SIZE;
         }
         this.state.moving = true;
         break;
@@ -232,8 +268,8 @@ export const PlayerComponent = defineComponent({
 
     if (this.state.moving) {
       const currentTime = performance.now();
-      newState.row = Math.round(newState.y / TILE_SIZE);
-      newState.col = Math.round(newState.x / TILE_SIZE);
+      newState.row = Math.round(newState.y / this.props.TILE_SIZE);
+      newState.col = Math.round(newState.x / this.props.TILE_SIZE);
 
       if (currentTime - this.state.lastAnimationTime > 150) {
         newState.frame = (newState.frame + 1) % 4;
@@ -265,14 +301,16 @@ export const PlayerComponent = defineComponent({
   },
 
   hitPlayer() {
-    if (this.state.gotKilled) return
+    if (this.state.gotKilled) return;
 
-    this.updateState({ gotKilled: true })
-    this.emit("player-killed", this.props.player.nickname)
+    this.updateState({ gotKilled: true });
+    this.emit("player-killed", this.props.player.nickname);
 
+    if (this.state.gameOver) return;
+    this.resetPlayer();
     setTimeout(() => {
-      this.updateState({ gotKilled: false })
-    }, 4000)
+      this.updateState({ gotKilled: false });
+    }, 4000);
   },
 
   checkAbilityPickup(abilities) {
@@ -305,15 +343,12 @@ export const PlayerComponent = defineComponent({
     switch (powerupType) {
       case "bombs":
         newPowerup.bombLimit += 1;
-        console.log(`Bomb limit increased to ${newPowerup.bombLimit}`);
         break;
       case "flames":
         newPowerup.bombRange += 1;
-        console.log(`Bomb range increased to ${newPowerup.bombRange}`);
         break;
       case "speed":
-        newPowerup.speed += 50;
-        console.log(`Speed increased to ${newPowerup.speed}`);
+        newPowerup.speed += this.props.TILE_SIZE;
         break;
     }
 
@@ -321,27 +356,33 @@ export const PlayerComponent = defineComponent({
   },
 
   render() {
-    const spritePosition = `-${(this.props.isCurrentPlayer
-      ? this.state.frame
-      : this.props.player.frame) * TILE_SIZE
-      }px -${SPRITE_DIRECTIONS[
-      this.props.isCurrentPlayer
-        ? this.state.direction
-        : this.props.player.direction
-      ] * TILE_SIZE
-      }px`;
+    const spritePosition = `-${
+      (this.props.isCurrentPlayer
+        ? this.state.frame
+        : this.props.player.frame) * this.props.TILE_SIZE
+    }px -${
+      SPRITE_DIRECTIONS[
+        this.props.isCurrentPlayer
+          ? this.state.direction
+          : this.props.player.direction
+      ] * this.props.TILE_SIZE
+    }px`;
 
     return h(
       "div",
       {
-        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.gotKilled || this.state.isWaving ? "player-killed" : ""
-          }`,
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${
+          this.state.gotKilled || this.state.isWaving ? "player-killed" : ""
+        }`,
         style: {
           backgroundImage: `url("./assets/players/player-${this.state.character}.png")`,
-          transform: `translate(
-                    ${this.props.isCurrentPlayer ? this.state.x : this.props.player.x}px, 
-                    ${this.props.isCurrentPlayer ? this.state.y : this.props.player.y}px)`,
+          transform: `translate(${this.state.x}px, ${this.state.y}px)`,
           backgroundPosition: spritePosition,
+          width: `${this.props.TILE_SIZE}px`,
+          height: `${this.props.TILE_SIZE}px`,
+          backgroundSize: `${this.props.TILE_SIZE * 4}px ${
+            this.props.TILE_SIZE * 4
+          }px`,
         },
       },
       []
