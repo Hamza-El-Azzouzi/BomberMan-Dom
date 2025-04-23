@@ -93,12 +93,12 @@ export const PlayerComponent = defineComponent({
       players: this.state.players.map((p) =>
         p.nickname === data.nickname
           ? {
-              ...p,
-              x: absoluteX,
-              y: absoluteY,
-              direction: data.position.direction,
-              frame: data.position.frame,
-            }
+            ...p,
+            x: absoluteX,
+            y: absoluteY,
+            direction: data.position.direction,
+            frame: data.position.frame,
+          }
           : p
       ),
     });
@@ -139,6 +139,7 @@ export const PlayerComponent = defineComponent({
   },
 
   update(deltaTime) {
+    if (this.state.gameOver) return
     if (this.props.activeKeys.length === 0 && !this.state.witness) {
       this.updateState({ frame: 0, witness: true });
       let newState = { ...this.state };
@@ -356,33 +357,29 @@ export const PlayerComponent = defineComponent({
   },
 
   render() {
-    const spritePosition = `-${
-      (this.props.isCurrentPlayer
-        ? this.state.frame
-        : this.props.player.frame) * this.props.TILE_SIZE
-    }px -${
-      SPRITE_DIRECTIONS[
-        this.props.isCurrentPlayer
-          ? this.state.direction
-          : this.props.player.direction
+    const spritePosition = `-${(this.props.isCurrentPlayer
+      ? this.state.frame
+      : this.props.player.frame) * this.props.TILE_SIZE
+      }px -${SPRITE_DIRECTIONS[
+      this.props.isCurrentPlayer
+        ? this.state.direction
+        : this.props.player.direction
       ] * this.props.TILE_SIZE
-    }px`;
+      }px`;
 
     return h(
       "div",
       {
-        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${
-          this.state.gotKilled || this.state.isWaving ? "player-killed" : ""
-        }`,
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.gotKilled || this.state.isWaving ? "player-killed" : ""
+          }`,
         style: {
           backgroundImage: `url("./assets/players/player-${this.state.character}.png")`,
           transform: `translate(${this.state.x}px, ${this.state.y}px)`,
           backgroundPosition: spritePosition,
           width: `${this.props.TILE_SIZE}px`,
           height: `${this.props.TILE_SIZE}px`,
-          backgroundSize: `${this.props.TILE_SIZE * 4}px ${
-            this.props.TILE_SIZE * 4
-          }px`,
+          backgroundSize: `${this.props.TILE_SIZE * 4}px ${this.props.TILE_SIZE * 4
+            }px`,
         },
       },
       []

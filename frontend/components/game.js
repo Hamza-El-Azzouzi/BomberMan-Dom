@@ -94,11 +94,9 @@ export const GameComponent = defineComponent({
             console.log(`Player disconnected: ${data.nickname}`);
             const updatedPlayers = this.state.players.filter(player => player.nickname !== data.nickname);
             this.updateState({
-                players: updatedPlayers,
+              players: updatedPlayers,
             });
             break;
-          default:
-            console.log("Unhandled message:", data);
         }
       };
     }
@@ -199,10 +197,10 @@ export const GameComponent = defineComponent({
       players: this.state.players.map((p) =>
         p.nickname === data.nickname
           ? {
-              ...p,
-              direction: data.position.direction,
-              frame: data.position.frame,
-            }
+            ...p,
+            direction: data.position.direction,
+            frame: data.position.frame,
+          }
           : p
       ),
     });
@@ -368,10 +366,10 @@ export const GameComponent = defineComponent({
       players: this.state.players.map((player) =>
         player.nickname === this.state.currentPlayer
           ? {
-              ...player,
-              x: data.newState.x,
-              y: data.newState.y,
-            }
+            ...player,
+            x: data.newState.x,
+            y: data.newState.y,
+          }
           : player
       ),
     });
@@ -435,12 +433,18 @@ export const GameComponent = defineComponent({
         gameOver: true,
         winner: this.state.players[0].nickname,
       })
-      
-      setTimeout(()=>{
-        this.props.ws.send(JSON.stringify({type :"game_ended", roomId: this.props.roomId}))
+
+      setTimeout(() => {
+        const playerComponent = this.getPlayerComponent(this.state.winner);
+        if (playerComponent) {
+          playerComponent.updateState({
+            gameOver: true
+          })
+        }
+        this.props.ws.send(JSON.stringify({ type: "game_ended", roomId: this.props.roomId }))
         this.props.ws.close()
-      },5000)
-     
+      }, 5000)
+
     }
 
     return h(

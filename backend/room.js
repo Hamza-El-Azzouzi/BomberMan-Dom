@@ -99,8 +99,7 @@ export class Room {
                 if (msg.hash === client.currentHash) { this.broadcastPlayerKilled(msg); }
                 break;
             case "ability":
-                if (msg.hash === client.currentHash) { this.broadcastAbility(msg); }
-
+                this.broadcastAbility(msg)
                 break;
             case 'bomb_placed':
                 if (msg.hash === client.currentHash) { this.broadcastBombExplosion(msg); }
@@ -188,7 +187,7 @@ export class Room {
 
     const count = this.getRegisteredPlayersCount();
     if (count >= 2 && count < 4) {
-      this.startCountdown(2);
+      this.startCountdown(20);
     } else if (count === 4) {
       this.startCountdown(10);
     }

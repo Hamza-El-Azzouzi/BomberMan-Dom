@@ -114,7 +114,7 @@ body {
 }
 
 .nickname-container input {
-  width: 100%;
+  width: 89%;
   padding: 15px 20px;
   border: 2px solid var(--border);
   border-radius: 8px;
