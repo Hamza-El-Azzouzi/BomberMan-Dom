@@ -81,7 +81,9 @@ export const PlayerComponent = defineComponent({
           y: newState.y,
           frame: newState.frame,
           direction: newState.direction,
+
         },
+        hash: localStorage.getItem("clientHash")
       })
     );
   },

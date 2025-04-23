@@ -42,11 +42,22 @@ const wss = new WebSocketServer({ server });
 const roomManager = new RoomManager();
 
 wss.on('connection', (ws) => {
+
     const room = roomManager.findAvailableRoom();
     room.handleConnection(ws);
+    ws.on('message', (data) => {
+        const msg = JSON.parse(data.toString());
+        if (msg.type === 'game_ended') {
+            roomManager.destroyRoom(msg.roomId)
+            ws.close();
+        }
+    })
 });
+
 
 const PORT = 8080;
 server.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
 });
+
+

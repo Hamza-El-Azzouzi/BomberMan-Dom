@@ -14,11 +14,12 @@ const App = defineComponent({
       ws: null,
       messages: [],
       map: [],
+      roomId: null
     };
   },
   handleNickname(nickname) {
     if (!nickname.trim()) return;
-    const ws = new WebSocket("ws://localhost:8080/ws");
+    const ws = new WebSocket("ws://10.1.6.1:8080/ws");
 
     ws.onopen = () => {
       ws.send(
@@ -38,6 +39,9 @@ const App = defineComponent({
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       switch (data.type) {
+        case "tocken":
+          localStorage.setItem("clientHash", data.hash)
+          break;
         case "player_count":
           this.updateState({ playerCount: data.count });
           break;
@@ -52,6 +56,7 @@ const App = defineComponent({
             map: data.map,
             view: "game",
             players: data.players,
+            roomId: data.roomId
           });
           break;
         case "nickname_taken":
@@ -74,7 +79,16 @@ const App = defineComponent({
     };
 
     ws.onclose = () => {
-      this.updateState({ view: "nickname" });
+      this.updateState({
+        view: "nickname",
+        nickname: null,
+        playerCount: 0,
+        countdown: null,
+        ws: null,
+        messages: [],
+        map: [],
+        roomId: null
+      });
     };
   },
   render() {
@@ -97,6 +111,7 @@ const App = defineComponent({
             ws: this.state.ws,
             players: this.state.players,
             map: this.state.map,
+            roomId: this.state.roomId
           });
         default:
           return h("div", {}, ["Loading..."]);
@@ -106,10 +121,10 @@ const App = defineComponent({
     const chatComponent =
       this.state.view !== "nickname"
         ? h(ChatComponent, {
-            ws: this.state.ws,
-            nickname: this.state.nickname,
-            messages: this.state.messages,
-          })
+          ws: this.state.ws,
+          nickname: this.state.nickname,
+          messages: this.state.messages,
+        })
         : null;
 
     return h("div", { class: "app-container" }, [mainContent, chatComponent]);

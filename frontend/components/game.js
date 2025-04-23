@@ -27,13 +27,12 @@ export const GameComponent = defineComponent({
       bombs: [],
       explosions: [],
       abilities: [],
-      lives: 3,
+      lives: 1,
     };
   },
 
   onMounted() {
     let currentPlayerData
-
     this.props.players.forEach(player => {
       if (player.nickname === this.props.nickname) {
         currentPlayerData = player;
@@ -89,6 +88,13 @@ export const GameComponent = defineComponent({
             break;
           case "player_killed":
             this.handleRemotePlayerKilled(data)
+            break;
+          case 'player_disconnected':
+            console.log(`Player disconnected: ${data.nickname}`);
+            const updatedPlayers = this.state.players.filter(player => player.nickname !== data.nickname);
+            this.updateState({
+                players: updatedPlayers,
+            });
             break;
           default:
             console.log("Unhandled message:", data);
@@ -178,7 +184,8 @@ export const GameComponent = defineComponent({
             row: bombData.row,
             col: bombData.col,
             range: bombData.range,
-          }
+          },
+          hash: localStorage.getItem("clientHash")
         })
       );
     }
@@ -264,12 +271,12 @@ export const GameComponent = defineComponent({
         if (isPlayerInExplosion(playerRow, playerCol, explosions)) {
           this.getPlayerComponent(player.nickname).hitPlayer();
 
-          this.props.ws.send(
-            JSON.stringify({
-              type: "player_hit",
-              nickname: player.nickname
-            })
-          );
+          // this.props.ws.send(
+          //   JSON.stringify({
+          //     type: "player_hit",
+          //     nickname: player.nickname
+          //   })
+          // );
         }
       }
     });
@@ -342,7 +349,8 @@ export const GameComponent = defineComponent({
     let states = {
       type: "player_killed",
       nickname: nickname,
-      livesLeft: 0
+      livesLeft: 0,
+      hash: localStorage.getItem("clientHash")
     }
 
     if (this.state.lives > 1) {
@@ -382,7 +390,8 @@ export const GameComponent = defineComponent({
           type: "ability",
           ability: ability,
           action: "remove",
-          nickname: this.state.currentPlayer
+          nickname: this.state.currentPlayer,
+          hash: localStorage.getItem("clientHash")
         })
       );
     }
@@ -394,6 +403,12 @@ export const GameComponent = defineComponent({
         gameOver: true,
         winner: this.state.players[0].nickname,
       })
+      
+      setTimeout(()=>{
+        this.props.ws.send(JSON.stringify({type :"game_ended", roomId: this.props.roomId}))
+        this.props.ws.close()
+      },10000)
+     
     }
 
     return h(
