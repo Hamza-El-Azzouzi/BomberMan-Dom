@@ -84,9 +84,6 @@ export const GameComponent = defineComponent({
           case "block_destroyed":
             this.handleBlockDestroyed(data);
             break;
-          case "player_hit":
-            this.handlePlayerHit(data);
-            break;
           case "ability":
             this.handleCommingAbilities(data);
             break;
@@ -241,6 +238,7 @@ export const GameComponent = defineComponent({
   },
 
   handleExplosion(explosionData) {
+    if (!explosionData.owner) return;
     const { row, col, range } = explosionData;
     const newBombs = this.state.bombs.filter(
       (bomb) => !(bomb.row === row && bomb.col === col)
@@ -312,7 +310,7 @@ export const GameComponent = defineComponent({
 
     if (explosionData.owner === this.state.currentPlayer) {
       const playerComponent = this.getPlayerComponent(this.state.currentPlayer);
-      if (playerComponent) {
+      if (playerComponent && !playerComponent.state.gameOver) {
         setTimeout(() => {
           playerComponent.handleBombCompleted();
         }, 1000);
@@ -341,13 +339,6 @@ export const GameComponent = defineComponent({
     this.updateState({
       tiles: newTiles,
     });
-  },
-
-  handlePlayerHit(data) {
-    const playerComponent = this.getPlayerComponent(data.nickname);
-    if (playerComponent) {
-      // playerComponent.killPlayer();
-    }
   },
 
   handleBombRemoved(bombData) {
@@ -393,6 +384,8 @@ export const GameComponent = defineComponent({
         lives: this.state.lives - 1,
       });
     } else {
+      const playerComponent = this.getPlayerComponent(nickname);
+      playerComponent.updateState({ gameOver: true });
       this.props.ws.send(JSON.stringify(states));
 
       const newPlayers = this.state.players.filter(
@@ -414,7 +407,6 @@ export const GameComponent = defineComponent({
       this.updateState({
         abilities: newAbilities,
       });
-      // TODO : Notify other players about the ability pickup using ws
 
       this.props.ws.send(
         JSON.stringify({
@@ -450,13 +442,13 @@ export const GameComponent = defineComponent({
           currentPlayer: this.state.currentPlayerData,
           lives: this.state.lives,
           gameOver: this.state.gameOver,
+          TILE_SIZE: this.state.TILE_SIZE,
         }),
         h(GameOverComponent, {
           visible: this.state.gameOver,
           winner: this.state.winner,
           currentPlayer: this.state.currentPlayer,
           isCurrentPlayerWinner: this.state.winner === this.state.currentPlayer,
-          // onPlayAgain: () => this.handlePlayAgain()
         }),
         h(
           MapComponent,

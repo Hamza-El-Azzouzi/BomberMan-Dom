@@ -26,7 +26,7 @@ body {
 
 /* Game hud styles */
 .game-hud {
-  width: 750px;
+  width: 60vw;
   max-width: 750px;
   padding: 10px 20px;
   box-sizing: border-box;
@@ -78,12 +78,6 @@ body {
   display: flex;
   gap: 15px;
   flex-direction: row;
-}
-
-.game-hud .player-character {
-  width: 50px;
-  height: 50px;
-
 }
 
 .player-name {
@@ -260,7 +254,6 @@ body {
 }
 
 .chat-input button {
-  padding: 12px 20px;
   background: var(--accent);
   color: var(--primary);
   border: none;
@@ -319,7 +312,7 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 1120px) {
+@media (max-width: 850px) {
   .app-container {
     flex-direction: column;
     padding: 10px;
@@ -421,10 +414,8 @@ body {
 }
 
 .game-map {
-  width: 750px;
+  width: 60vw;
   max-width: 750px;
-  height: 650px;
-  max-height: 650px;
   background-image: url("./assets/empty-space.png");
   display: flex;
   flex-direction: column;
@@ -790,7 +781,16 @@ body {
   }
 }
 
-@media (max-width: 800px) {
+@media (max-width: 850px) {
+  .game-map {
+    width: 80vw;
+  }
+  .game-hud{
+    width: 80vw;
+  }
+}
+
+@media (max-width: 750px) {
   :root {
     --float-height: -0.5vh;
   }

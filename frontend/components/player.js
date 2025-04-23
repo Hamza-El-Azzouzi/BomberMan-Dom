@@ -14,7 +14,6 @@ export const PlayerComponent = defineComponent({
       direction: "down",
       frame: 0,
       speed: 150,
-      isDying: false,
       row: 1,
       col: 1,
       lastAnimationTime: 0,
@@ -25,6 +24,7 @@ export const PlayerComponent = defineComponent({
       bombRange: BOMB_CONFIG.defaultRange,
       lastBombTime: 0,
       bombCooldown: 500,
+      gameOver: false,
     };
   },
 
@@ -47,19 +47,17 @@ export const PlayerComponent = defineComponent({
 
   resetPlayer() {
     this.updateState({
-      isDying: false,
-      x: this.props.TILE_SIZE,
-      y: this.props.TILE_SIZE,
-      col: 1,
-      row: 1,
+      x: this.props.player.col * this.props.TILE_SIZE,
+      y: this.props.player.row * this.props.TILE_SIZE,
+      character: this.props.player.character,
       direction: "down",
       frame: 0,
-      bombsPlaced: 0,
     });
+    this.sendPlayerMoves(this.state);
   },
 
   animate(timestamp) {
-    if (!this.state.isDying) {
+    if (!this.state.gameOver) {
       const deltaTime = (timestamp - (this.lastTimestamp || timestamp)) / 1000;
       this.lastTimestamp = timestamp;
       this.update(deltaTime);
@@ -139,8 +137,6 @@ export const PlayerComponent = defineComponent({
   },
 
   update(deltaTime) {
-    if (this.state.isDying) return;
-
     if (this.props.activeKeys.length === 0 && !this.state.witness) {
       this.updateState({ frame: 0, witness: true });
       let newState = { ...this.state };
@@ -303,14 +299,16 @@ export const PlayerComponent = defineComponent({
   },
 
   hitPlayer() {
-    if (this.state.gotKilled) return
+    if (this.state.gotKilled) return;
 
-    this.updateState({ gotKilled: true })
-    this.emit("player-killed", this.props.player.nickname)
+    this.updateState({ gotKilled: true });
+    this.emit("player-killed", this.props.player.nickname);
 
+    if (this.state.gameOver) return;
+    this.resetPlayer();
     setTimeout(() => {
-      this.updateState({ gotKilled: false })
-    }, 4000)
+      this.updateState({ gotKilled: false });
+    }, 4000);
   },
 
   checkAbilityPickup(abilities) {
@@ -343,15 +341,12 @@ export const PlayerComponent = defineComponent({
     switch (powerupType) {
       case "bombs":
         newPowerup.bombLimit += 1;
-        console.log(`Bomb limit increased to ${newPowerup.bombLimit}`);
         break;
       case "flames":
         newPowerup.bombRange += 1;
-        console.log(`Bomb range increased to ${newPowerup.bombRange}`);
         break;
       case "speed":
-        newPowerup.speed += 50;
-        console.log(`Speed increased to ${newPowerup.speed}`);
+        newPowerup.speed += this.props.TILE_SIZE;
         break;
     }
 
@@ -374,8 +369,9 @@ export const PlayerComponent = defineComponent({
     return h(
       "div",
       {
-        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${this.state.gotKilled || this.state.isWaving ? "player-killed" : ""
-          }`,
+        class: `player ${this.props.isCurrentPlayer ? "current" : ""} ${
+          this.state.gotKilled || this.state.isWaving ? "player-killed" : ""
+        }`,
         style: {
           backgroundImage: `url("./assets/players/player-${this.state.character}.png")`,
           transform: `translate(${this.state.x}px, ${this.state.y}px)`,
