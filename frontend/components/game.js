@@ -1,14 +1,15 @@
-import {
-  defineComponent,
-  h,
-} from "https://unpkg.com/obsydianjs@latest";
+import { defineComponent, h } from "https://unpkg.com/obsydianjs@latest";
 import { MapComponent } from "./map.js";
 import { PlayerComponent } from "./player.js";
 import { BombComponent } from "./bomb.js";
 import { ExplosionComponent } from "./explosion.js";
-import { TILE_SIZE, TILE_TYPES } from "../constants/game-constants.js";
-import { calculateExplosion, isPlayerInExplosion, isTileBreakable } from "../utils/collision.js";
-import { getRandomAbility } from "../utils/abilities.js"
+import { TILE_TYPES } from "../constants/game-constants.js";
+import {
+  calculateExplosion,
+  isPlayerInExplosion,
+  isTileBreakable,
+} from "../utils/collision.js";
+import { getRandomAbility } from "../utils/abilities.js";
 import { AbilityComponent } from "./ability.js";
 import { HudComponent } from "./hud.js";
 import { GameOverComponent } from "./gameOver.js";
@@ -28,13 +29,15 @@ export const GameComponent = defineComponent({
       explosions: [],
       abilities: [],
       lives: 3,
+      containerWidth: 0,
+      TILE_SIZE: 50,
     };
   },
 
   onMounted() {
-    let currentPlayerData
+    let currentPlayerData;
 
-    this.props.players.forEach(player => {
+    this.props.players.forEach((player) => {
       if (player.nickname === this.props.nickname) {
         currentPlayerData = player;
       }
@@ -67,7 +70,7 @@ export const GameComponent = defineComponent({
               row: data.position.row,
               col: data.position.col,
               range: data.position.range,
-              nickname: data.nickname
+              nickname: data.nickname,
             });
             break;
           case "explosion":
@@ -75,20 +78,17 @@ export const GameComponent = defineComponent({
               row: data.row,
               col: data.col,
               range: data.range,
-              owner: data.owner
+              owner: data.owner,
             });
             break;
           case "block_destroyed":
             this.handleBlockDestroyed(data);
             break;
-          case "player_hit":
-            this.handlePlayerHit(data);
-            break;
           case "ability":
-            this.handleCommingAbilities(data)
+            this.handleCommingAbilities(data);
             break;
           case "player_killed":
-            this.handleRemotePlayerKilled(data)
+            this.handleRemotePlayerKilled(data);
             break;
           default:
             console.log("Unhandled message:", data);
@@ -99,26 +99,46 @@ export const GameComponent = defineComponent({
 
   handleRemotePlayerKilled(data) {
     if (data.livesLeft === 0) {
-      const newPlayers = this.state.players.filter(player => player.nickname != data.nickname)
+      const newPlayers = this.state.players.filter(
+        (player) => player.nickname != data.nickname
+      );
 
       this.updateState({
         players: newPlayers,
-      })
+      });
     } else {
       const playerComponent = this.getPlayerComponent(data.nickname);
       if (playerComponent) {
-        playerComponent.state.isWaving = true
+        playerComponent.state.isWaving = true;
 
         playerComponent.updateState({
-          isWaving: true
-        })
+          isWaving: true,
+        });
 
         setTimeout(() => {
-          playerComponent.updateState({ isWaving: false })
-        }, 4000)
+          playerComponent.updateState({ isWaving: false });
+        }, 4000);
       }
-
     }
+  },
+
+  handleContainerResize(newTileSize) {
+    this.updateState({ containerWidth: newTileSize });
+
+    this.state.players.forEach((player) => {
+      const playerComponent = this.getPlayerComponent(player.nickname);
+      if (playerComponent) {
+        const currentRow = playerComponent.state.y / this.state.TILE_SIZE;
+        const currentCol = playerComponent.state.x / this.state.TILE_SIZE;
+
+        playerComponent.updateState({
+          x: currentCol * newTileSize,
+          y: currentRow * newTileSize,
+          speed: newTileSize * 3,
+        });
+      }
+    });
+    this.state.TILE_SIZE = newTileSize;
   },
 
   handleCommingAbilities(data) {
@@ -127,9 +147,11 @@ export const GameComponent = defineComponent({
         this.state.abilities.push(data.ability);
         break;
       case "remove":
-        const newAbilities = this.state.abilities.filter(a => a.id !== data.ability.id);
+        const newAbilities = this.state.abilities.filter(
+          (a) => a.id !== data.ability.id
+        );
         this.updateState({
-          abilities: newAbilities
+          abilities: newAbilities,
         });
         break;
     }
@@ -153,16 +175,27 @@ export const GameComponent = defineComponent({
   },
 
   handlePlayerMove(data) {
+    const absoluteX = data.position.x * this.state.TILE_SIZE;
+    const absoluteY = data.position.y * this.state.TILE_SIZE;
+
+    this.state.players.forEach((player) => {
+      const playerComponent = this.getPlayerComponent(player.nickname);
+      if (playerComponent && player.nickname === data.nickname) {
+        playerComponent.updateState({
+          x: absoluteX,
+          y: absoluteY,
+        });
+      }
+    });
+
     this.updateState({
       players: this.state.players.map((p) =>
         p.nickname === data.nickname
           ? {
-            ...p,
-            x: data.position.x,
-            y: data.position.y,
-            direction: data.position.direction,
-            frame: data.position.frame,
-          }
+              ...p,
+              direction: data.position.direction,
+              frame: data.position.frame,
+            }
           : p
       ),
     });
@@ -178,7 +211,7 @@ export const GameComponent = defineComponent({
             row: bombData.row,
             col: bombData.col,
             range: bombData.range,
-          }
+          },
         })
       );
     }
@@ -192,7 +225,7 @@ export const GameComponent = defineComponent({
       col: bombData.col,
       range: bombData.range,
       owner: bombData.nickname,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     const newTiles = [...this.state.tiles];
@@ -200,40 +233,41 @@ export const GameComponent = defineComponent({
 
     this.updateState({
       bombs: newBombs,
-      tiles: newTiles
+      tiles: newTiles,
     });
   },
 
   handleExplosion(explosionData) {
+    if (!explosionData.owner) return;
     const { row, col, range } = explosionData;
     const newBombs = this.state.bombs.filter(
-      bomb => !(bomb.row === row && bomb.col === col)
+      (bomb) => !(bomb.row === row && bomb.col === col)
     );
     const newTiles = [...this.state.tiles];
     newTiles[row][col] = TILE_TYPES.EMPTY;
     const explosions = calculateExplosion(row, col, range, this.state.tiles);
 
-    explosions.forEach(explosion => {
+    explosions.forEach((explosion) => {
       const newExplosions = [...this.state.explosions];
       newExplosions.push({
         id: `explosion-${Date.now()}-${explosion.row}-${explosion.col}`,
         row: explosion.row,
         col: explosion.col,
         direction: explosion.direction,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       if (isTileBreakable(newTiles[explosion.row][explosion.col])) {
         newTiles[explosion.row][explosion.col] = TILE_TYPES.EMPTY;
         if (explosionData.owner === this.state.currentPlayer) {
-          const abilityType = getRandomAbility()
+          const abilityType = getRandomAbility();
           if (abilityType) {
             const ability = {
               row: explosion.row,
               col: explosion.col,
               type: abilityType,
               id: `ability-${Date.now()}-${explosion.row}-${explosion.col}`,
-            }
+            };
 
             this.state.abilities.push(ability);
 
@@ -242,7 +276,7 @@ export const GameComponent = defineComponent({
                 type: "ability",
                 ability: ability,
                 action: "add",
-                nickname: this.state.currentPlayer
+                nickname: this.state.currentPlayer,
               })
             );
           }
@@ -252,14 +286,14 @@ export const GameComponent = defineComponent({
       this.updateState({
         bombs: newBombs,
         explosions: newExplosions,
-        tiles: newTiles
+        tiles: newTiles,
       });
     });
 
-    this.state.players.forEach(player => {
+    this.state.players.forEach((player) => {
       if (player.nickname === this.state.currentPlayer) {
-        const playerRow = Math.round(player.y / TILE_SIZE);
-        const playerCol = Math.round(player.x / TILE_SIZE);
+        const playerRow = Math.round(player.y / this.state.TILE_SIZE);
+        const playerCol = Math.round(player.x / this.state.TILE_SIZE);
 
         if (isPlayerInExplosion(playerRow, playerCol, explosions)) {
           this.getPlayerComponent(player.nickname).hitPlayer();
@@ -267,7 +301,7 @@ export const GameComponent = defineComponent({
           this.props.ws.send(
             JSON.stringify({
               type: "player_hit",
-              nickname: player.nickname
+              nickname: player.nickname,
             })
           );
         }
@@ -276,21 +310,25 @@ export const GameComponent = defineComponent({
 
     if (explosionData.owner === this.state.currentPlayer) {
       const playerComponent = this.getPlayerComponent(this.state.currentPlayer);
-      if (playerComponent) {
+      if (playerComponent && !playerComponent.state.gameOver) {
         setTimeout(() => {
           playerComponent.handleBombCompleted();
-        }, 1000)
+        }, 1000);
       }
     }
   },
 
   handleExplosionComplete(explosionData) {
     const newExplosions = this.state.explosions.filter(
-      explosion => !(explosion.row === explosionData.row && explosion.col === explosionData.col)
+      (explosion) =>
+        !(
+          explosion.row === explosionData.row &&
+          explosion.col === explosionData.col
+        )
     );
 
     this.updateState({
-      explosions: newExplosions
+      explosions: newExplosions,
     });
   },
 
@@ -299,24 +337,17 @@ export const GameComponent = defineComponent({
     newTiles[data.position.row][data.position.col] = data.position.newTile;
 
     this.updateState({
-      tiles: newTiles
+      tiles: newTiles,
     });
-  },
-
-  handlePlayerHit(data) {
-    const playerComponent = this.getPlayerComponent(data.nickname);
-    if (playerComponent) {
-      // playerComponent.killPlayer();
-    }
   },
 
   handleBombRemoved(bombData) {
     const newBombs = this.state.bombs.filter(
-      bomb => !(bomb.row === bombData.row && bomb.col === bombData.col)
+      (bomb) => !(bomb.row === bombData.row && bomb.col === bombData.col)
     );
 
     this.updateState({
-      bombs: newBombs
+      bombs: newBombs,
     });
   },
 
@@ -326,15 +357,15 @@ export const GameComponent = defineComponent({
 
   handlePlayerUpdate(data) {
     this.updateState({
-      players: this.state.players.map(player =>
+      players: this.state.players.map((player) =>
         player.nickname === this.state.currentPlayer
           ? {
-            ...player,
-            x: data.newState.x,
-            y: data.newState.y
-          }
+              ...player,
+              x: data.newState.x,
+              y: data.newState.y,
+            }
           : player
-      )
+      ),
     });
   },
 
@@ -342,47 +373,47 @@ export const GameComponent = defineComponent({
     let states = {
       type: "player_killed",
       nickname: nickname,
-      livesLeft: 0
-    }
+      livesLeft: 0,
+    };
 
     if (this.state.lives > 1) {
-      states.livesLeft = this.state.lives - 1
-      this.props.ws.send(
-        JSON.stringify(states)
-      );
+      states.livesLeft = this.state.lives - 1;
+      this.props.ws.send(JSON.stringify(states));
 
       this.updateState({
-        lives: this.state.lives - 1
-      })
+        lives: this.state.lives - 1,
+      });
     } else {
-      this.props.ws.send(
-        JSON.stringify(states)
+      const playerComponent = this.getPlayerComponent(nickname);
+      playerComponent.updateState({ gameOver: true });
+      this.props.ws.send(JSON.stringify(states));
+
+      const newPlayers = this.state.players.filter(
+        (player) => player.nickname != nickname
       );
-
-
-      const newPlayers = this.state.players.filter(player => player.nickname != nickname)
       this.updateState({
         players: newPlayers,
-        lives: 0
-      })
+        lives: 0,
+      });
     }
   },
 
   handlePickupAbility(data) {
-    const ability = this.state.abilities.find(ability => ability.id === data.id);
+    const ability = this.state.abilities.find(
+      (ability) => ability.id === data.id
+    );
     if (ability) {
-      const newAbilities = this.state.abilities.filter(a => a.id !== data.id);
+      const newAbilities = this.state.abilities.filter((a) => a.id !== data.id);
       this.updateState({
-        abilities: newAbilities
+        abilities: newAbilities,
       });
-      // TODO : Notify other players about the ability pickup using ws
 
       this.props.ws.send(
         JSON.stringify({
           type: "ability",
           ability: ability,
           action: "remove",
-          nickname: this.state.currentPlayer
+          nickname: this.state.currentPlayer,
         })
       );
     }
@@ -393,7 +424,7 @@ export const GameComponent = defineComponent({
       this.updateState({
         gameOver: true,
         winner: this.state.players[0].nickname,
-      })
+      });
     }
 
     return h(
@@ -411,18 +442,22 @@ export const GameComponent = defineComponent({
           currentPlayer: this.state.currentPlayerData,
           lives: this.state.lives,
           gameOver: this.state.gameOver,
+          TILE_SIZE: this.state.TILE_SIZE,
         }),
         h(GameOverComponent, {
           visible: this.state.gameOver,
           winner: this.state.winner,
           currentPlayer: this.state.currentPlayer,
           isCurrentPlayerWinner: this.state.winner === this.state.currentPlayer,
-          // onPlayAgain: () => this.handlePlayAgain()
         }),
         h(
           MapComponent,
           {
             tiles: this.state.tiles,
+            TILE_SIZE: this.state.TILE_SIZE,
+            on: {
+              "container-resize": (data) => this.handleContainerResize(data),
+            },
           },
           [
             ...this.state.players.map((player) =>
@@ -441,12 +476,14 @@ export const GameComponent = defineComponent({
                   "bomb-placed": (bombData) => this.handleBombPlaced(bombData),
                   "ability-pickup": (data) => this.handlePickupAbility(data),
                   "update-player": (data) => this.handlePlayerUpdate(data),
-                  "player-killed": (nickname) => this.handlePlayerGetKilled(nickname),
-                }
+                  "player-killed": (nickname) =>
+                    this.handlePlayerGetKilled(nickname),
+                },
+                TILE_SIZE: this.state.TILE_SIZE,
               })
             ),
 
-            ...this.state.bombs.map(bomb =>
+            ...this.state.bombs.map((bomb) =>
               h(BombComponent, {
                 ws: this.state.ws,
                 key: bomb.id,
@@ -455,29 +492,34 @@ export const GameComponent = defineComponent({
                 owner: bomb.owner,
                 range: bomb.range,
                 on: {
-                  "explosion": (data) => this.handleExplosion({ ...data, owner: bomb.owner }),
-                  "bomb-removed": (data) => this.handleBombRemoved(data)
-                }
+                  explosion: (data) =>
+                    this.handleExplosion({ ...data, owner: bomb.owner }),
+                  "bomb-removed": (data) => this.handleBombRemoved(data),
+                },
+                TILE_SIZE: this.state.TILE_SIZE,
               })
             ),
 
-            ...this.state.explosions.map(explosion =>
+            ...this.state.explosions.map((explosion) =>
               h(ExplosionComponent, {
                 key: explosion.id,
                 row: explosion.row,
                 col: explosion.col,
                 direction: explosion.direction,
                 on: {
-                  "explosion-complete": (data) => this.handleExplosionComplete(data)
-                }
+                  "explosion-complete": (data) =>
+                    this.handleExplosionComplete(data),
+                },
+                TILE_SIZE: this.state.TILE_SIZE,
               })
             ),
-            ...this.state.abilities.map(ability =>
+            ...this.state.abilities.map((ability) =>
               h(AbilityComponent, {
                 key: ability.id,
                 row: ability.row,
                 col: ability.col,
                 type: ability.type,
+                TILE_SIZE: this.state.TILE_SIZE,
               })
             ),
           ]

@@ -5,10 +5,10 @@
   --text: #ffffff;
   --text-secondary: #cccccc;
   --border: #404040;
+  --float-height: -1vh;
 }
 
 body {
-  margin: 0;
   background: var(--primary);
   color: var(--text);
   font-family: "Segoe UI", system-ui, sans-serif;
@@ -26,7 +26,7 @@ body {
 
 /* Game hud styles */
 .game-hud {
-  width: 750px;
+  width: 60vw;
   max-width: 750px;
   padding: 10px 20px;
   box-sizing: border-box;
@@ -78,12 +78,6 @@ body {
   display: flex;
   gap: 15px;
   flex-direction: row;
-}
-
-.game-hud .player-character {
-  width: 50px;
-  height: 50px;
-
 }
 
 .player-name {
@@ -260,7 +254,6 @@ body {
 }
 
 .chat-input button {
-  padding: 12px 20px;
   background: var(--accent);
   color: var(--primary);
   border: none;
@@ -283,6 +276,10 @@ body {
   justify-content: center;
   font-size: 3rem;
   color: var(--accent);
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  outline: none;
 }
 
 /* Loading State */
@@ -299,7 +296,6 @@ body {
 }
 
 @keyframes dots {
-
   0%,
   20% {
     content: ".";
@@ -316,7 +312,7 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 850px) {
   .app-container {
     flex-direction: column;
     padding: 10px;
@@ -417,18 +413,9 @@ body {
   }
 }
 
-.game-container {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  outline: none;
-}
-
 .game-map {
-  width: 750px;
+  width: 60vw;
   max-width: 750px;
-  height: 650px;
-  max-height: 650px;
   background-image: url("./assets/empty-space.png");
   display: flex;
   flex-direction: column;
@@ -442,8 +429,7 @@ body {
 }
 
 .cell {
-  width: 50px;
-  height: 50px;
+  height: 100%;
   aspect-ratio: 1;
   background-repeat: no-repeat;
   background-size: contain;
@@ -490,14 +476,6 @@ body {
   background: #44ff44;
 }
 
-/* .player {
-  position: absolute;
-  background-image: url("./assets/altima2.png");
-  will-change: transform, background-position;
-  z-index: 1;
-  width: 50px;
-  height: 50px;
-} */
 .player-killed {
   animation: wave 0.5s infinite;
   opacity: 0.7;
@@ -538,7 +516,6 @@ body {
   position: absolute;
   width: 50px;
   height: 50px;
-  /* background-image: url("./assets/altima2.png"); */
   will-change: transform, background-position;
   z-index: 1;
   transition: transform 0.05s linear;
@@ -689,7 +666,7 @@ body {
   }
 
   50% {
-    transform: translateY(-5px);
+    transform: translateY(var(--float-height));
   }
 
   100% {
@@ -801,5 +778,41 @@ body {
   to {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@media (max-width: 850px) {
+  .game-map {
+    width: 80vw;
+  }
+  .game-hud{
+    width: 80vw;
+  }
+}
+
+@media (max-width: 750px) {
+  :root {
+    --float-height: -0.5vh;
+  }
+
+  .game-map {
+    width: 90vw;
+    height: calc(90vw * 0.867);
+  }
+  .game-hud{
+    width: 90vw;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --float-height: -0.25vh;
+  }
+}
+
+@media (max-height: 720px) {
+  .map {
+    width: calc(90vh * 1.143);
+    height: 89vh;
   }
 }

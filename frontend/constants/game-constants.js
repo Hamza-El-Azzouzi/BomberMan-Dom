@@ -1,5 +1,3 @@
-export const TILE_SIZE = 50;
-
 export const SPRITE_DIRECTIONS = {
   down: 0,
   left: 1,
