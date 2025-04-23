@@ -11,6 +11,7 @@ const App = defineComponent({
       nickname: null,
       playerCount: 0,
       countdown: null,
+      countdownType: null, 
       ws: null,
       messages: [],
       map: [],
@@ -19,7 +20,7 @@ const App = defineComponent({
   },
   handleNickname(nickname) {
     if (!nickname.trim()) return;
-    const ws = new WebSocket("ws://10.1.6.1:8080/ws");
+    const ws = new WebSocket("ws://localhost:8080/ws");
 
     ws.onopen = () => {
       ws.send(
@@ -49,7 +50,10 @@ const App = defineComponent({
           if (data.seconds === 0) {
             return;
           }
-          this.updateState({ countdown: data.seconds });
+          this.updateState({ 
+            countdown: data.seconds,
+            countdownType: data.countdownType 
+          });
           break;
         case "start_game":
           this.updateState({
@@ -84,6 +88,7 @@ const App = defineComponent({
         nickname: null,
         playerCount: 0,
         countdown: null,
+        countdownType: null,
         ws: null,
         messages: [],
         map: [],
@@ -104,6 +109,7 @@ const App = defineComponent({
           return h(WaitingRoom, {
             playerCount: this.state.playerCount,
             countdown: this.state.countdown,
+            countdownType: this.state.countdownType,
           });
         case "game":
           return h(GameComponent, {
