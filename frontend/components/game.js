@@ -91,7 +91,6 @@ export const GameComponent = defineComponent({
             this.handleRemotePlayerKilled(data);
             break;
           case 'player_disconnected':
-            console.log(`Player disconnected: ${data.nickname}`);
             const updatedPlayers = this.state.players.filter(player => player.nickname !== data.nickname);
             this.updateState({
               players: updatedPlayers,

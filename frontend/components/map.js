@@ -32,15 +32,6 @@ export const MapComponent = defineComponent({
               case TILE_TYPES.BREAKABLE:
                 className += "breakable";
                 break;
-              case TILE_TYPES.BOMB_POWERUP:
-                className += "powerup bomb";
-                break;
-              case TILE_TYPES.FLAME_POWERUP:
-                className += "powerup flame";
-                break;
-              case TILE_TYPES.SPEED_POWERUP:
-                className += "powerup speed";
-                break;
               default:
                 className += "empty";
             }

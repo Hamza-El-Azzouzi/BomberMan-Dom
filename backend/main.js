@@ -30,7 +30,7 @@ const server = createServer(async (req, res) => {
     } catch (err) {
         if (err.code === 'ENOENT') {
             res.writeHead(404);
-            res.end('File not found');
+            res.end('Page not found');
         } else {
             res.writeHead(500);
             res.end('Server error: ' + err.code);
