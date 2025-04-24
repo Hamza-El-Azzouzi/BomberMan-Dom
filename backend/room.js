@@ -1,3 +1,4 @@
+import crypto from "crypto";
 export class Room {
   constructor(id, gameMap) {
     this.id = id;
@@ -8,16 +9,50 @@ export class Room {
     this.characters = [1, 2, 3, 4];
     this.countdown = null;
   }
+  generateHash() {
+    return crypto
+      .createHmac("sha256", "DEDDBDE87979812335A9BBCAEAF56")
+      .update(Date.now().toString())
+      .digest("hex");
+  }
 
   handleConnection(ws) {
-    const client = { ws, registered: false };
+    const initialHash = this.generateHash();
+    const client = {
+      ws,
+      registered: false,
+      currentHash: initialHash,
+      hashInterval: setInterval(() => {
+        const hash = this.generateHash();
+        client.currentHash = hash;
+        ws.send(
+          JSON.stringify({
+            type: "tocken",
+            hash: hash,
+          })
+        );
+      }, 5000),
+    };
     this.clients.set(ws, client);
-
     console.log(`New client connected to room ${this.id}`);
 
+    ws.send(
+      JSON.stringify({
+        type: "tocken",
+        hash: initialHash,
+      })
+    );
+
+    client.clientHash = initialHash;
+
     ws.on("close", () => {
+      clearInterval(client.hashInterval);
       this.clients.delete(ws);
       this.broadcastPlayerCount();
+      this.broadcast({
+        type: "player_disconnected",
+        nickname: client.nickname,
+      });
       this.checkAutoStart();
     });
 
@@ -62,16 +97,23 @@ export class Room {
         break;
 
       case "player_move":
-        this.broadcastPlayerMove(msg);
+        if (msg.hash === client.currentHash) {
+          this.broadcastPlayerMove(msg);
+        }
         break;
       case "player_killed":
-        this.broadcastPlayerKilled(msg);
+        if (msg.hash === client.currentHash) {
+          this.broadcastPlayerKilled(msg);
+        }
         break;
       case "ability":
         this.broadcastAbility(msg);
         break;
       case "bomb_placed":
-        this.broadcastBombExplosion(msg);
+        if (msg.hash === client.currentHash) {
+          this.broadcastBombExplosion(msg);
+        }
+
         break;
       case "explosion":
         this.broadcastBombExplosion(msg);
@@ -155,13 +197,40 @@ export class Room {
 
     const count = this.getRegisteredPlayersCount();
     if (count >= 2 && count < 4) {
-      this.startCountdown(2);
+      if (!this.countdown) {
+        this.startWaitingCountdown();
+      }
     } else if (count === 4) {
-      this.startCountdown(10);
+      if (this.countdown) {
+        clearInterval(this.countdown);
+      }
+      this.startGameCountdown();
     }
   }
 
-  startCountdown(seconds) {
+  startWaitingCountdown() {
+    if (this.countdown) {
+      clearInterval(this.countdown);
+    }
+
+    let countdown = 20;
+    this.countdown = setInterval(() => {
+      this.broadcast({
+        type: "countdown",
+        seconds: countdown,
+        countdownType: "waiting",
+      });
+
+      if (countdown <= 0) {
+        clearInterval(this.countdown);
+        this.startGameCountdown();
+        return;
+      }
+      countdown--;
+    }, 1000);
+  }
+
+  startGameCountdown(seconds = 10) {
     if (this.countdown) {
       clearInterval(this.countdown);
     }
@@ -171,6 +240,7 @@ export class Room {
       this.broadcast({
         type: "countdown",
         seconds: countdown,
+        countdownType: "starting",
       });
 
       if (countdown <= 0) {
@@ -219,6 +289,7 @@ export class Room {
       type: "start_game",
       players: playerInfos,
       map: this.gameMap,
+      roomId: this.id,
     });
   }
 }

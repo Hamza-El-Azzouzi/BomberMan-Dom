@@ -26,7 +26,14 @@ export class RoomManager {
     }
 
     createRoom() {
-        const roomId = `room_${this.rooms.size}`;
+        const roomId = `room_${Math.random().toString(16).slice(2, 10)}`;
         return new Room(roomId, generateMap());
+    }
+
+    destroyRoom(roomId) {
+        if (this.rooms.has(roomId)) {
+            this.rooms.delete(roomId);
+            console.log(`Room ${roomId} has been destroyed.`);
+        }
     }
 }

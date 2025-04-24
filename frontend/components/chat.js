@@ -4,8 +4,17 @@ export const ChatComponent = defineComponent({
   state() {
     return {
       message: "",
+      lastMessageCount: 0
     };
   },
+
+  scrollToBottom() {
+    const chatContainer = this.firstElement.firstChild
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  },
+
   sendMessage() {
     if (this.state.message.trim() && this.props.ws) {
       this.props.ws.send(
@@ -18,7 +27,13 @@ export const ChatComponent = defineComponent({
       this.updateState({ message: "" });
     }
   },
+
   render() {
+    if (this.props.messages && this.props.messages.length !== this.state.lastMessageCount) {
+      this.updateState({ lastMessageCount: this.props.messages.length });
+      setTimeout(() => this.scrollToBottom(), 0);
+    }
+
     return h("div", { class: "chat-container" }, [
       h(
         "div",

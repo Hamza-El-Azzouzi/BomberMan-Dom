@@ -90,8 +90,12 @@ export const GameComponent = defineComponent({
           case "player_killed":
             this.handleRemotePlayerKilled(data);
             break;
-          default:
-            console.log("Unhandled message:", data);
+          case 'player_disconnected':
+            const updatedPlayers = this.state.players.filter(player => player.nickname !== data.nickname);
+            this.updateState({
+              players: updatedPlayers,
+            });
+            break;
         }
       };
     }
@@ -192,10 +196,10 @@ export const GameComponent = defineComponent({
       players: this.state.players.map((p) =>
         p.nickname === data.nickname
           ? {
-              ...p,
-              direction: data.position.direction,
-              frame: data.position.frame,
-            }
+            ...p,
+            direction: data.position.direction,
+            frame: data.position.frame,
+          }
           : p
       ),
     });
@@ -212,6 +216,7 @@ export const GameComponent = defineComponent({
             col: bombData.col,
             range: bombData.range,
           },
+          hash: localStorage.getItem("clientHash")
         })
       );
     }
@@ -298,12 +303,12 @@ export const GameComponent = defineComponent({
         if (isPlayerInExplosion(playerRow, playerCol, explosions)) {
           this.getPlayerComponent(player.nickname).hitPlayer();
 
-          this.props.ws.send(
-            JSON.stringify({
-              type: "player_hit",
-              nickname: player.nickname,
-            })
-          );
+          // this.props.ws.send(
+          //   JSON.stringify({
+          //     type: "player_hit",
+          //     nickname: player.nickname
+          //   })
+          // );
         }
       }
     });
@@ -360,10 +365,10 @@ export const GameComponent = defineComponent({
       players: this.state.players.map((player) =>
         player.nickname === this.state.currentPlayer
           ? {
-              ...player,
-              x: data.newState.x,
-              y: data.newState.y,
-            }
+            ...player,
+            x: data.newState.x,
+            y: data.newState.y,
+          }
           : player
       ),
     });
@@ -374,7 +379,8 @@ export const GameComponent = defineComponent({
       type: "player_killed",
       nickname: nickname,
       livesLeft: 0,
-    };
+      hash: localStorage.getItem("clientHash")
+    }
 
     if (this.state.lives > 1) {
       states.livesLeft = this.state.lives - 1;
@@ -414,6 +420,7 @@ export const GameComponent = defineComponent({
           ability: ability,
           action: "remove",
           nickname: this.state.currentPlayer,
+          hash: localStorage.getItem("clientHash")
         })
       );
     }
@@ -424,7 +431,19 @@ export const GameComponent = defineComponent({
       this.updateState({
         gameOver: true,
         winner: this.state.players[0].nickname,
-      });
+      })
+
+      setTimeout(() => {
+        const playerComponent = this.getPlayerComponent(this.state.winner);
+        if (playerComponent) {
+          playerComponent.updateState({
+            gameOver: true
+          })
+        }
+        this.props.ws.send(JSON.stringify({ type: "game_ended", roomId: this.props.roomId }))
+        this.props.ws.close()
+      }, 5000)
+
     }
 
     return h(

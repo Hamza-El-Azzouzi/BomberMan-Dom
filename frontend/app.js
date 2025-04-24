@@ -11,9 +11,11 @@ const App = defineComponent({
       nickname: null,
       playerCount: 0,
       countdown: null,
+      countdownType: null, 
       ws: null,
       messages: [],
       map: [],
+      roomId: null
     };
   },
   handleNickname(nickname) {
@@ -38,6 +40,9 @@ const App = defineComponent({
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       switch (data.type) {
+        case "tocken":
+          localStorage.setItem("clientHash", data.hash)
+          break;
         case "player_count":
           this.updateState({ playerCount: data.count });
           break;
@@ -45,13 +50,17 @@ const App = defineComponent({
           if (data.seconds === 0) {
             return;
           }
-          this.updateState({ countdown: data.seconds });
+          this.updateState({ 
+            countdown: data.seconds,
+            countdownType: data.countdownType 
+          });
           break;
         case "start_game":
           this.updateState({
             map: data.map,
             view: "game",
             players: data.players,
+            roomId: data.roomId
           });
           break;
         case "nickname_taken":
@@ -74,7 +83,17 @@ const App = defineComponent({
     };
 
     ws.onclose = () => {
-      this.updateState({ view: "nickname" });
+      this.updateState({
+        view: "nickname",
+        nickname: null,
+        playerCount: 0,
+        countdown: null,
+        countdownType: null,
+        ws: null,
+        messages: [],
+        map: [],
+        roomId: null
+      });
     };
   },
   render() {
@@ -90,6 +109,7 @@ const App = defineComponent({
           return h(WaitingRoom, {
             playerCount: this.state.playerCount,
             countdown: this.state.countdown,
+            countdownType: this.state.countdownType,
           });
         case "game":
           return h(GameComponent, {
@@ -97,6 +117,7 @@ const App = defineComponent({
             ws: this.state.ws,
             players: this.state.players,
             map: this.state.map,
+            roomId: this.state.roomId
           });
         default:
           return h("div", {}, ["Loading..."]);
@@ -106,10 +127,10 @@ const App = defineComponent({
     const chatComponent =
       this.state.view !== "nickname"
         ? h(ChatComponent, {
-            ws: this.state.ws,
-            nickname: this.state.nickname,
-            messages: this.state.messages,
-          })
+          ws: this.state.ws,
+          nickname: this.state.nickname,
+          messages: this.state.messages,
+        })
         : null;
 
     return h("div", { class: "app-container" }, [mainContent, chatComponent]);
